@@ -7,4 +7,4 @@ end
 default['kube_config_dir'] = '/etc/kubernetes'
 default['flanneld_config_file'] = '/etc/sysconfig/flanneld'
 default['etcd_config_file'] = '/etc/etcd/etcd.conf'
-default['kube_master_ip'] = '192.168.100.101'
+default['kube_master_ip'] = '192.168.100.111'
