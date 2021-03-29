@@ -1,0 +1,8 @@
+[master]
+testkube.jackson.com
+
+
+[nodes]
+testkube1.jackson.com
+testkube2.jackson.com
+
