@@ -1,12 +1,12 @@
 ---
-  - hosts: all
+  - hosts: master
     roles:
       - common
 
-  - hosts: master
-    roles:
-      - master
-
-  - hosts: nodes
-    roles:
-      - nodes
+#  - hosts: master
+#    roles:
+#      - master
+#
+#  - hosts: nodes
+#    roles:
+#      - nodes

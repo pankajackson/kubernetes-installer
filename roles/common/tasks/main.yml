@@ -1,33 +1,35 @@
 ---
-  - name: Disable SWAP since kubernetes can't work with swap enabled (1/2)
-    shell: |
-      swapoff -a
-    become: true
-
-  - name: Disable SWAP in fstab since kubernetes can't work with swap enabled (2/2)
-    replace:
-      path: /etc/fstab
-      regexp: '^([^#].*?\sswap\s+sw\s+.*)$'
-      replace: '# \1'
-    become: true
-
   - name: Set hostname of Machine
     hostname:
       name: "{{ hostvars[inventory_hostname].group_names[0] }}-{{ ansible_date_time.epoch }}"
     become: true
 
-  - name: Add kubernetes repository key
-    apt_key:
-      url: "https://packages.cloud.google.com/apt/doc/apt-key.gpg"
-      state: present
-    become: true
+  - name: Disable Swap
+    block:
+      - name: Disable SWAP since kubernetes can't work with swap enabled (1/2)
+        shell: |
+          swapoff -a
+        become: true
+      - name: Disable SWAP in fstab since kubernetes can't work with swap enabled (2/2)
+        replace:
+          path: /etc/fstab
+          regexp: '^([^#].*?\sswap\s+sw\s+.*)$'
+          replace: '# \1'
+        become: true
 
-  - name: Add kubernetes repository
-    apt_repository:
-      repo: deb http://apt.kubernetes.io/ kubernetes-xenial main
-      state: present
-      filename: 'kubernetes.list'
-    become: true
+  - name: Configure Repository
+    block:
+      - name: Add kubernetes repository key
+        apt_key:
+          url: "https://packages.cloud.google.com/apt/doc/apt-key.gpg"
+          state: present
+        become: true
+      - name: Add kubernetes repository
+        apt_repository:
+          repo: deb http://apt.kubernetes.io/ kubernetes-xenial main
+          state: present
+          filename: 'kubernetes.list'
+        become: true
 
   - name: Install required packages
     apt:
@@ -35,31 +37,31 @@
       update_cache: yes
     become: true
 
-  - name: Creates docker data directory
-    file:
-      path: "{{ docker_data_path }}"
-      state: directory
-    become: true
+  - name: Configure Docker
+    block:
+      - name: Creates docker data directory
+        file:
+          path: "{{ docker_data_path }}"
+          state: directory
+        become: true
+      - name: Configure data path of docker
+        template:
+          src: docker.daemon.json.j2
+          dest: /etc/docker/daemon.json
+        become: true
+        notify: "restart docker service"
 
-  - name: Configure data path of docker
-    template:
-      src: docker.daemon.json.j2
-      dest: /etc/docker/daemon.json
-    become: true
-    notify: "restart docker service"
-
-  - name: Backup kubernetes service file
-    copy:
-      src: /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
-      dest: /etc/systemd/system/kubelet.service.d/10-kubeadm.conf.bkp
-      remote_src: yes
-    become: true
-
-  - name: find the line number of last occurrence of String 'Environment'
-    shell: "awk \"/Environment=/ { ln = FNR } END { print ln }\" /etc/systemd/system/kubelet.service.d/10-kubeadm.conf"
-    register: linenumber
-    become: true
-
-  - name: Add new line in kube config file
-    shell: "sed -i \"{{ linenumber.stdout|int + 1 }}iEnvironment=\\\"cgroup-driver=systemd/cgroup-driver=cgroupfs\\\"\" /etc/systemd/system/kubelet.service.d/10-kubeadm.conf"
-    become: true
+  - name: Configure Basic Kube Environment
+    block:
+      - name: Backup kubernetes service file
+        copy:
+          src: /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
+          dest: /etc/systemd/system/kubelet.service.d/10-kubeadm.conf.bkp
+          remote_src: yes
+        become: true
+      - name: Add cgroup-driver Environment variable in kubeadm service file
+        lineinfile:
+          path: /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
+          insertafter: '^Environment='
+          line: 'Environment="cgroup-driver=systemd/cgroup-driver=cgroupfs"'
+        become: true
