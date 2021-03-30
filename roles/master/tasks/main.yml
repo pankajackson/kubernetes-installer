@@ -1,2 +1,41 @@
 ---
-# tasks file for master
+  - name: Initialize the cluster
+    shell: kubeadm init --apiserver-advertise-address={{ ansible_default_ipv4.address }} --pod-network-cidr=192.168.0.0/16
+    register: k8s_init_status
+    become: true
+
+  - name: Create .kube directory
+    file:
+      path: "{{ ansible_env.HOME }}/.kube"
+      state: directory
+
+  - name: Copy admin.conf to user's kube config
+    copy:
+      src: /etc/kubernetes/admin.conf
+      dest: "{{ ansible_env.HOME }}/.kube/config"
+      remote_src: true
+      owner: "{{ ansible_env.USER }}"
+      group: "{{ ansible_env.USER }}"
+    become: true
+
+  - name: Upload pod network config
+    copy:
+      src: calico.yaml
+      dest: "{{ ansible_env.HOME }}/.kube"
+
+  - name: Install Pod network
+    shell: "kubectl apply -f {{ ansible_env.HOME }}/.kube/calico.yaml"
+
+  - name: Set env FELIX_IGNORELOOSERPF=true to ignore unwanted errors
+    shell: "kubectl -n kube-system set env daemonset/calico-node FELIX_IGNORELOOSERPF=true"
+
+  - name: Upload dashboard config
+    copy:
+      src: dashboard.yaml
+      dest: "{{ ansible_env.HOME }}/.kube"
+
+  - name: Install dashboard
+    shell: "kubectl apply -f {{ ansible_env.HOME }}/.kube/dashboard.yaml"
+
+
+

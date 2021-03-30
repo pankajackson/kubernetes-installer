@@ -3,10 +3,10 @@
     roles:
       - common
 
-#  - hosts: master
-#    roles:
-#      - master
-#
+  - hosts: master
+    roles:
+      - master
+
 #  - hosts: nodes
 #    roles:
 #      - nodes
