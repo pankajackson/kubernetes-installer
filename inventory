@@ -3,6 +3,5 @@ testkube.jackson.com ansible_connection=ssh ansible_user=jackson ansible_ssh_pas
 
 
 [nodes]
-testkube01.jackson.com
-testkube02.jackson.com
+testkube01.jackson.com ansible_connection=ssh ansible_user=jackson ansible_ssh_pass=123456
 

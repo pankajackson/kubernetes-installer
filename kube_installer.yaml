@@ -1,5 +1,5 @@
 ---
-  - hosts: master
+  - hosts: all
     roles:
       - common
 
@@ -7,6 +7,6 @@
     roles:
       - master
 
-#  - hosts: nodes
-#    roles:
-#      - nodes
+  - hosts: nodes
+    roles:
+      - nodes

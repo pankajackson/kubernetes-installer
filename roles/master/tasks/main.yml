@@ -37,5 +37,39 @@
   - name: Install dashboard
     shell: "kubectl apply -f {{ ansible_env.HOME }}/.kube/dashboard.yaml"
 
+  - name: wait for pods to come up
+    shell: 'kubectl wait --all-namespaces --for=condition=Ready pods --all  --timeout 600s'
+    register: control_plane_pods_ready
+    until: control_plane_pods_ready is not failed
+    retries: 5
 
+  - debug: var=control_plane_pods_ready
 
+  - name: Create Service Account
+    shell: "kubectl create serviceaccount dashboard -n default"
+
+  - name: Create cluster role binding with service account
+    shell: "kubectl create clusterrolebinding dashboard-admin -n default --clusterrole=cluster-admin   --serviceaccount=default:dashboard"
+
+  - name: Generate Login Token
+    shell: 'kubectl get secret $(kubectl get serviceaccount dashboard -o jsonpath="{.secrets[0].name}") -o jsonpath="{.data.token}" | base64 --decode'
+    register: dashboard_login_token
+
+  - name: Start Dashboard
+    shell: "kubectl proxy &"
+
+  - name: Get Node joining Token
+    shell: "kubeadm token create  --print-join-command"
+    register: node_joining_token
+
+  - name: Print Dashboard Login Details
+    debug:
+      msg: "{{ item }}"
+    with_items:
+      - "dashboard login url: http://localhost:8001/api/v1/namespaces/kubernetes-dashboard/services/https:kubernetes-dashboard:/proxy/"
+      - "dashboard login token: {{dashboard_login_token.stdout}}"
+
+  - name: "Add K8S Token to dummy host"
+    add_host:
+      name:   "K8S_TOKEN_HOLDER"
+      token:  "{{ node_joining_token.stdout }}"

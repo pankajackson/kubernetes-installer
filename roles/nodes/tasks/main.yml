@@ -1,2 +1,5 @@
 ---
-# tasks file for nodes
+  - name: Add node to cluster
+    shell: "{{ hostvars['K8S_TOKEN_HOLDER']['token'] }}"
+    become: true
+

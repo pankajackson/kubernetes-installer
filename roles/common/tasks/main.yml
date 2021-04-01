@@ -1,4 +1,9 @@
 ---
+  - name: Reset old Cluster if exist
+    shell: "kubeadm reset -f"
+    ignore_errors: true
+    become: true
+
   - name: Set hostname of Machine
     hostname:
       name: "{{ hostvars[inventory_hostname].group_names[0] }}-{{ ansible_date_time.epoch }}"
