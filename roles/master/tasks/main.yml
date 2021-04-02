@@ -87,6 +87,25 @@
         args:
           chdir: "{{ nginx['dashboard']['cert']['path'] }}"
         become: true
+      - name: Nginx Kube Dashboard Configuration | Create Nginx Root Directory
+        file:
+          path: "/var/www/kube"
+          state: directory
+        become: true
+      - name: Nginx Kube Dashboard Configuration | Copy kube admin configuration
+        copy:
+          src: /etc/kubernetes/admin.conf
+          dest: "/var/www/kube/config"
+          remote_src: true
+        become: true
+      - name: Nginx Kube Dashboard Configuration | Remove Default Nginx config
+        file:
+          path: "{{ item }}"
+          state: absent
+        with_items:
+          - "/etc/nginx/sites-enabled/default"
+          - "/etc/nginx/sites-available/default"
+        become: true
       - name: Nginx Kube Dashboard Configuration | Configure Nginx config file
         template:
           src: nginx_kube_dashboard.conf.j2
@@ -100,7 +119,6 @@
           state: link
         become: true
         notify: "restart nginx service"
-
 
   - name: Generate and Store node joining Token
     block:
@@ -116,5 +134,10 @@
     debug:
       msg: "{{ item }}"
     with_items:
-      - "dashboard login url: http://localhost:8001/api/v1/namespaces/kubernetes-dashboard/services/https:kubernetes-dashboard:/proxy/"
-      - "dashboard login token: {{dashboard_login_token.stdout}}"
+      - "Kube Proxy dashboard login url: http://localhost:8001/api/v1/namespaces/kubernetes-dashboard/services/https:kubernetes-dashboard:/proxy/"
+      - "Kube Proxy dashboard login token: {{dashboard_login_token.stdout}}"
+      - "Kube Nginx Dashboard url: https://{{ ansible_default_ipv4.address }}/"
+      - "Kube Nginx Auth user: {{ nginx['dashboard']['admin_username'] }}"
+      - "Kube Nginx Auth password: <Please check variable>"
+      - "kubectl client configuration file url: https://{{ ansible_default_ipv4.address }}:4433/config"
+      - "After downloading config file place it in ~/.kube directory to use kubectl client correctly"
