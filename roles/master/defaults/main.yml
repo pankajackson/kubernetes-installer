@@ -1,2 +1,15 @@
 ---
-# defaults file for master
+  required_packages:
+    - nginx
+    - apache2-utils
+    - openssl
+
+  nginx:
+    dashboard:
+      pass_file_path: /etc/nginx/.htpasswd_kube_dashboard
+      admin_username: jackson
+      admin_password: 123456
+      cert:
+        path: /etc/nginx/certificate
+        ctr: kube.crt
+        key: kube.key

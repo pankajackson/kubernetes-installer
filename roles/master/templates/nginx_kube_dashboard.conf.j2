@@ -1,0 +1,18 @@
+server {
+        listen 443 ssl default_server;
+        listen [::]:443 ssl default_server;
+        ssl_certificate {{ nginx['dashboard']['cert']['path'] }}/{{ nginx["dashboard"]["cert"]["ctr"] }};
+        ssl_certificate_key {{ nginx['dashboard']['cert']['path'] }}/{{ nginx["dashboard"]["cert"]["key"] }};
+        root /var/www/html;
+        index index.html index.htm index.nginx-debian.html;
+        server_name _;
+        auth_basic "Secure area - Authentication required";
+        auth_basic_user_file {{ nginx['dashboard']['pass_file_path'] }};
+        location / {
+                proxy_pass https://{{ dashboard_ip_address.stdout }}:443;
+                proxy_ssl_certificate     /etc/kubernetes/pki/front-proxy-client.crt;
+                proxy_ssl_certificate_key     /etc/kubernetes/pki/front-proxy-client.key;
+                proxy_ssl_trusted_certificate  /etc/kubernetes/pki/ca.crt;
+                proxy_set_header Authorization "Bearer {{ nginx_proxy_token.stdout }}";
+        }
+}

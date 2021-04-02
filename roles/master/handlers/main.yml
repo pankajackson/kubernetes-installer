@@ -1,2 +1,8 @@
 ---
-# handlers file for master
+  - name: Restart and enable Nginx Service
+    systemd:
+      name: nginx
+      state: restarted
+      enabled: true
+    become: true
+    listen: "restart nginx service"
