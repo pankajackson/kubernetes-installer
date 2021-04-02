@@ -1,5 +1,7 @@
 ---
-  - name: Add node to cluster
-    shell: "{{ hostvars['K8S_TOKEN_HOLDER']['token'] }}"
-    become: true
+  - name: Node Configuration
+    block:
+      - name: Node Configuration | Add node to cluster
+        shell: "{{ hostvars['K8S_TOKEN_HOLDER']['token'] }}"
+        become: true
 

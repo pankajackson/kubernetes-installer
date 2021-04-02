@@ -1,15 +1,15 @@
 ---
-  - name: Configure Kube Master
+  - name: Kubernetes Master Configuration
     block:
-      - name: Initialize the cluster
+      - name: Kubernetes Master Configuration | Initialize cluster
         shell: kubeadm init --apiserver-advertise-address={{ ansible_default_ipv4.address }} --pod-network-cidr=192.168.0.0/16
         register: k8s_init_status
         become: true
-      - name: Create .kube directory
+      - name: Kubernetes Master Configuration | Create .kube directory
         file:
           path: "{{ ansible_env.HOME }}/.kube"
           state: directory
-      - name: Copy admin.conf to user's kube config
+      - name: Kubernetes Master Configuration | Copy admin.conf to user's kube config
         copy:
           src: /etc/kubernetes/admin.conf
           dest: "{{ ansible_env.HOME }}/.kube/config"
@@ -18,24 +18,24 @@
           group: "{{ ansible_env.USER }}"
         become: true
 
-  - name: Configure Pod Network
+  - name: Pod Network Configuration
     block:
-      - name: Upload pod network config
+      - name: Pod Network Configuration | Upload pod network config
         copy:
           src: calico.yaml
           dest: "{{ ansible_env.HOME }}/.kube"
-      - name: Install Pod network
+      - name: Pod Network Configuration | Install Pod network
         shell: "kubectl apply -f {{ ansible_env.HOME }}/.kube/calico.yaml"
-      - name: Set env FELIX_IGNORELOOSERPF=true to ignore unwanted errors
+      - name: Pod Network Configuration | Set env FELIX_IGNORELOOSERPF=true to ignore unwanted errors
         shell: "kubectl -n kube-system set env daemonset/calico-node FELIX_IGNORELOOSERPF=true"
 
-  - name: Configure Kube Dashboard
+  - name: Kubernetes Dashboard Configuration
     block:
-      - name: Upload dashboard config
+      - name: Kubernetes Dashboard Configuration | Upload dashboard config
         copy:
           src: dashboard.yaml
           dest: "{{ ansible_env.HOME }}/.kube"
-      - name: Install dashboard
+      - name: Kubernetes Dashboard Configuration | Install dashboard
         shell: "kubectl apply -f {{ ansible_env.HOME }}/.kube/dashboard.yaml"
 
   - name: wait for pods to come up
@@ -44,64 +44,65 @@
     until: control_plane_pods_ready is not failed
     retries: 5
 
-  - name: Setup Authorization for Dashboard
+  - name: Dashboard Authorization Configuration
     block:
-      - name: Create Service Account
+      - name: Dashboard Authorization Configuration | Create Service Account
         shell: "kubectl create serviceaccount dashboard -n default"
-      - name: Create cluster role binding with service account
+      - name: Dashboard Authorization Configuration | Create cluster role binding with service account
         shell: "kubectl create clusterrolebinding dashboard-admin -n default --clusterrole=cluster-admin   --serviceaccount=default:dashboard"
-      - name: Generate Login Token
+      - name: Dashboard Authorization Configuration | Generate Login Token
         shell: 'kubectl get secret $(kubectl get serviceaccount dashboard -o jsonpath="{.secrets[0].name}") -o jsonpath="{.data.token}" | base64 --decode'
         register: dashboard_login_token
 
-  - name: Configure Nginx for Kube Dashboard
+  - name: Nginx Kube Dashboard Configuration
     block:
-      - name: Install required packages
+      - name: Nginx Kube Dashboard Configuration | Install required packages
         apt:
           pkg: "{{ required_packages }}"
           update_cache: yes
         become: true
 
-      - name: Create Service Account for nginx-proxy
+      - name: Nginx Kube Dashboard Configuration | Create Service Account for nginx-proxy
         shell: "kubectl create serviceaccount nginx-proxy -n kube-system"
 
-      - name: Craete Cluster role bindinng to the Nginx proxy account
+      - name: Nginx Kube Dashboard Configuration | Craete Cluster role bindinng to the Nginx proxy account
         shell: "kubectl create clusterrolebinding nginx-proxy --clusterrole=cluster-admin --serviceaccount=kube-system:nginx-proxy"
 
-      - name: Get Nginx proxt secret token name
+      - name: Nginx Kube Dashboard Configuration | Get Nginx proxt secret token name
         shell: "kubectl get secrets --all-namespaces | grep nginx-proxy | awk '{ print $2 }'"
         register: nginx_proxy_token_name
 
-      - name: Get Token for Nginx proxy
+      - name: Nginx Kube Dashboard Configuration | Get Token for Nginx proxy
         shell: "kubectl get secret -n kube-system {{ nginx_proxy_token_name.stdout }} -o jsonpath=\"{.data.token}\" | base64 --decode"
         register: nginx_proxy_token
 
-      - name: Get Kubernetes Dashboard Cluster IP
+      - name: Nginx Kube Dashboard Configuration | Get Kubernetes Dashboard Cluster IP
         shell: "kubectl get Service -n kubernetes-dashboard kubernetes-dashboard | grep dashboard | awk '{ print $3 }'"
         register: dashboard_ip_address
 
-      - name: Setup Basic Auth for nginx proxy
+      - name: Nginx Kube Dashboard Configuration | Setup Basic Auth for nginx proxy
         shell: "htpasswd -b -c {{ nginx['dashboard']['pass_file_path'] }} {{ nginx['dashboard']['admin_username'] }} {{ nginx['dashboard']['admin_password'] }}"
         become: true
 
-      - name: Create Certificate Directory
+      - name: Nginx Kube Dashboard Configuration | Create Certificate Directory
         file:
           path: "{{ nginx['dashboard']['cert']['path'] }}"
           state: directory
+        become: true
 
-      - name: Generate SSL Certificate for nginx
+      - name: Nginx Kube Dashboard Configuration | Generate SSL Certificate for nginx
         shell: "openssl req -new -newkey rsa:4096 -x509 -sha256 -days 3650 -nodes -out {{ nginx['dashboard']['cert']['ctr'] }} -keyout {{ nginx['dashboard']['cert']['key'] }} -subj \"/C=IN/ST=MadhyaPradesh/L=Indore/O=Jackson pvt ltd/OU=Jackson/CN=*.jackson.com\""
         args:
           chdir: "{{ nginx['dashboard']['cert']['path'] }}"
         become: true
 
-      - name: Configure Nginx
+      - name: Nginx Kube Dashboard Configuration | Configure Nginx config file
         template:
           src: nginx_kube_dashboard.conf.j2
           dest: /etc/nginx/sites-available/nginx_kube_dashboard.conf
         become: true
 
-      - name: Enable site config
+      - name: Nginx Kube Dashboard Configuration | Enable site config
         file:
           src: "/etc/nginx/sites-available/nginx_kube_dashboard.conf"
           dest: "/etc/nginx/sites-enabled/nginx_kube_dashboard.conf"
