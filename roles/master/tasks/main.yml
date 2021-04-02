@@ -1,41 +1,42 @@
 ---
-  - name: Initialize the cluster
-    shell: kubeadm init --apiserver-advertise-address={{ ansible_default_ipv4.address }} --pod-network-cidr=192.168.0.0/16
-    register: k8s_init_status
-    become: true
+  - name: Configure Kube Master
+    block:
+      - name: Initialize the cluster
+        shell: kubeadm init --apiserver-advertise-address={{ ansible_default_ipv4.address }} --pod-network-cidr=192.168.0.0/16
+        register: k8s_init_status
+        become: true
+      - name: Create .kube directory
+        file:
+          path: "{{ ansible_env.HOME }}/.kube"
+          state: directory
+      - name: Copy admin.conf to user's kube config
+        copy:
+          src: /etc/kubernetes/admin.conf
+          dest: "{{ ansible_env.HOME }}/.kube/config"
+          remote_src: true
+          owner: "{{ ansible_env.USER }}"
+          group: "{{ ansible_env.USER }}"
+        become: true
 
-  - name: Create .kube directory
-    file:
-      path: "{{ ansible_env.HOME }}/.kube"
-      state: directory
+  - name: Configure Pod Network
+    block:
+      - name: Upload pod network config
+        copy:
+          src: calico.yaml
+          dest: "{{ ansible_env.HOME }}/.kube"
+      - name: Install Pod network
+        shell: "kubectl apply -f {{ ansible_env.HOME }}/.kube/calico.yaml"
+      - name: Set env FELIX_IGNORELOOSERPF=true to ignore unwanted errors
+        shell: "kubectl -n kube-system set env daemonset/calico-node FELIX_IGNORELOOSERPF=true"
 
-  - name: Copy admin.conf to user's kube config
-    copy:
-      src: /etc/kubernetes/admin.conf
-      dest: "{{ ansible_env.HOME }}/.kube/config"
-      remote_src: true
-      owner: "{{ ansible_env.USER }}"
-      group: "{{ ansible_env.USER }}"
-    become: true
-
-  - name: Upload pod network config
-    copy:
-      src: calico.yaml
-      dest: "{{ ansible_env.HOME }}/.kube"
-
-  - name: Install Pod network
-    shell: "kubectl apply -f {{ ansible_env.HOME }}/.kube/calico.yaml"
-
-  - name: Set env FELIX_IGNORELOOSERPF=true to ignore unwanted errors
-    shell: "kubectl -n kube-system set env daemonset/calico-node FELIX_IGNORELOOSERPF=true"
-
-  - name: Upload dashboard config
-    copy:
-      src: dashboard.yaml
-      dest: "{{ ansible_env.HOME }}/.kube"
-
-  - name: Install dashboard
-    shell: "kubectl apply -f {{ ansible_env.HOME }}/.kube/dashboard.yaml"
+  - name: Configure Kube Dashboard
+    block:
+      - name: Upload dashboard config
+        copy:
+          src: dashboard.yaml
+          dest: "{{ ansible_env.HOME }}/.kube"
+      - name: Install dashboard
+        shell: "kubectl apply -f {{ ansible_env.HOME }}/.kube/dashboard.yaml"
 
   - name: wait for pods to come up
     shell: 'kubectl wait --all-namespaces --for=condition=Ready pods --all  --timeout 600s'
@@ -43,24 +44,25 @@
     until: control_plane_pods_ready is not failed
     retries: 5
 
-  - debug: var=control_plane_pods_ready
+  - name: Setup Authorization for Dashboard
+    block:
+      - name: Create Service Account
+        shell: "kubectl create serviceaccount dashboard -n default"
+      - name: Create cluster role binding with service account
+        shell: "kubectl create clusterrolebinding dashboard-admin -n default --clusterrole=cluster-admin   --serviceaccount=default:dashboard"
+      - name: Generate Login Token
+        shell: 'kubectl get secret $(kubectl get serviceaccount dashboard -o jsonpath="{.secrets[0].name}") -o jsonpath="{.data.token}" | base64 --decode'
+        register: dashboard_login_token
 
-  - name: Create Service Account
-    shell: "kubectl create serviceaccount dashboard -n default"
-
-  - name: Create cluster role binding with service account
-    shell: "kubectl create clusterrolebinding dashboard-admin -n default --clusterrole=cluster-admin   --serviceaccount=default:dashboard"
-
-  - name: Generate Login Token
-    shell: 'kubectl get secret $(kubectl get serviceaccount dashboard -o jsonpath="{.secrets[0].name}") -o jsonpath="{.data.token}" | base64 --decode'
-    register: dashboard_login_token
-
-  - name: Start Dashboard
-    shell: "kubectl proxy &"
-
-  - name: Get Node joining Token
-    shell: "kubeadm token create  --print-join-command"
-    register: node_joining_token
+  - name: Generate and Store node joining Token
+    block:
+      - name: Get Node joining Token
+        shell: "kubeadm token create  --print-join-command"
+        register: node_joining_token
+      - name: "Add K8S Token to dummy host"
+        add_host:
+          name:   "K8S_TOKEN_HOLDER"
+          token:  "{{ node_joining_token.stdout }}"
 
   - name: Print Dashboard Login Details
     debug:
@@ -68,8 +70,3 @@
     with_items:
       - "dashboard login url: http://localhost:8001/api/v1/namespaces/kubernetes-dashboard/services/https:kubernetes-dashboard:/proxy/"
       - "dashboard login token: {{dashboard_login_token.stdout}}"
-
-  - name: "Add K8S Token to dummy host"
-    add_host:
-      name:   "K8S_TOKEN_HOLDER"
-      token:  "{{ node_joining_token.stdout }}"

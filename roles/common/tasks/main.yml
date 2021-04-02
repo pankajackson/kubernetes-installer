@@ -6,7 +6,7 @@
 
   - name: Set hostname of Machine
     hostname:
-      name: "{{ hostvars[inventory_hostname].group_names[0] }}-{{ ansible_date_time.epoch }}"
+      name: "{{ hostvars[inventory_hostname].group_names[0] }}-{{ ansible_default_ipv4.address | replace('.','') | reverse }}"
     become: true
 
   - name: Disable Swap
