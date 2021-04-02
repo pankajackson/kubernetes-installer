@@ -61,47 +61,38 @@
           pkg: "{{ required_packages }}"
           update_cache: yes
         become: true
-
       - name: Nginx Kube Dashboard Configuration | Create Service Account for nginx-proxy
         shell: "kubectl create serviceaccount nginx-proxy -n kube-system"
-
       - name: Nginx Kube Dashboard Configuration | Craete Cluster role bindinng to the Nginx proxy account
         shell: "kubectl create clusterrolebinding nginx-proxy --clusterrole=cluster-admin --serviceaccount=kube-system:nginx-proxy"
-
       - name: Nginx Kube Dashboard Configuration | Get Nginx proxt secret token name
         shell: "kubectl get secrets --all-namespaces | grep nginx-proxy | awk '{ print $2 }'"
         register: nginx_proxy_token_name
-
       - name: Nginx Kube Dashboard Configuration | Get Token for Nginx proxy
         shell: "kubectl get secret -n kube-system {{ nginx_proxy_token_name.stdout }} -o jsonpath=\"{.data.token}\" | base64 --decode"
         register: nginx_proxy_token
-
       - name: Nginx Kube Dashboard Configuration | Get Kubernetes Dashboard Cluster IP
         shell: "kubectl get Service -n kubernetes-dashboard kubernetes-dashboard | grep dashboard | awk '{ print $3 }'"
         register: dashboard_ip_address
-
       - name: Nginx Kube Dashboard Configuration | Setup Basic Auth for nginx proxy
         shell: "htpasswd -b -c {{ nginx['dashboard']['pass_file_path'] }} {{ nginx['dashboard']['admin_username'] }} {{ nginx['dashboard']['admin_password'] }}"
         become: true
-
       - name: Nginx Kube Dashboard Configuration | Create Certificate Directory
         file:
           path: "{{ nginx['dashboard']['cert']['path'] }}"
           state: directory
         become: true
-
       - name: Nginx Kube Dashboard Configuration | Generate SSL Certificate for nginx
         shell: "openssl req -new -newkey rsa:4096 -x509 -sha256 -days 3650 -nodes -out {{ nginx['dashboard']['cert']['ctr'] }} -keyout {{ nginx['dashboard']['cert']['key'] }} -subj \"/C=IN/ST=MadhyaPradesh/L=Indore/O=Jackson pvt ltd/OU=Jackson/CN=*.jackson.com\""
         args:
           chdir: "{{ nginx['dashboard']['cert']['path'] }}"
         become: true
-
       - name: Nginx Kube Dashboard Configuration | Configure Nginx config file
         template:
           src: nginx_kube_dashboard.conf.j2
           dest: /etc/nginx/sites-available/nginx_kube_dashboard.conf
         become: true
-
+        notify: "restart nginx service"
       - name: Nginx Kube Dashboard Configuration | Enable site config
         file:
           src: "/etc/nginx/sites-available/nginx_kube_dashboard.conf"
