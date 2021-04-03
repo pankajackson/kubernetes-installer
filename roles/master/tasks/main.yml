@@ -5,6 +5,7 @@
         shell: kubeadm init --apiserver-advertise-address={{ ansible_default_ipv4.address }} --pod-network-cidr=192.168.0.0/16
         register: k8s_init_status
         become: true
+        no_log: true
       - name: Kubernetes Master Configuration | Create .kube directory
         file:
           path: "{{ ansible_env.HOME }}/.kube"
@@ -62,6 +63,7 @@
       - name: Dashboard Authorization Configuration | Generate Login Token
         shell: 'kubectl get secret $(kubectl get serviceaccount dashboard -o jsonpath="{.secrets[0].name}") -o jsonpath="{.data.token}" | base64 --decode'
         register: dashboard_login_token
+        no_log: true
 
   - name: Nginx Kube Dashboard Configuration
     block:
@@ -77,25 +79,31 @@
       - name: Nginx Kube Dashboard Configuration | Get Nginx proxt secret token name
         shell: "kubectl get secrets --all-namespaces | grep nginx-proxy | awk '{ print $2 }'"
         register: nginx_proxy_token_name
+        no_log: true
       - name: Nginx Kube Dashboard Configuration | Get Token for Nginx proxy
         shell: "kubectl get secret -n kube-system {{ nginx_proxy_token_name.stdout }} -o jsonpath=\"{.data.token}\" | base64 --decode"
         register: nginx_proxy_token
+        no_log: true
       - name: Nginx Kube Dashboard Configuration | Get Kubernetes Dashboard Cluster IP
         shell: "kubectl get Service -n kubernetes-dashboard kubernetes-dashboard | grep dashboard | awk '{ print $3 }'"
         register: dashboard_ip_address
+        no_log: true
       - name: Nginx Kube Dashboard Configuration | Setup Basic Auth for nginx proxy
         shell: "htpasswd -b -c {{ nginx['dashboard']['pass_file_path'] }} {{ nginx['dashboard']['admin_username'] }} {{ nginx['dashboard']['admin_password'] }}"
         become: true
+        no_log: true
       - name: Nginx Kube Dashboard Configuration | Create Certificate Directory
         file:
           path: "{{ nginx['dashboard']['cert']['path'] }}"
           state: directory
         become: true
+        no_log: true
       - name: Nginx Kube Dashboard Configuration | Generate SSL Certificate for nginx
         shell: "openssl req -new -newkey rsa:4096 -x509 -sha256 -days 3650 -nodes -out {{ nginx['dashboard']['cert']['ctr'] }} -keyout {{ nginx['dashboard']['cert']['key'] }} -subj \"/C=IN/ST=MadhyaPradesh/L=Indore/O=Jackson pvt ltd/OU=Jackson/CN=*.jackson.com\""
         args:
           chdir: "{{ nginx['dashboard']['cert']['path'] }}"
         become: true
+        no_log: true
       - name: Nginx Kube Dashboard Configuration | Create Nginx Root Directory
         file:
           path: "/var/www/kube"
@@ -107,6 +115,7 @@
           dest: "/var/www/kube/config"
           remote_src: true
         become: true
+        no_log: true
       - name: Nginx Kube Dashboard Configuration | Remove Default Nginx config
         file:
           path: "{{ item }}"
@@ -120,6 +129,7 @@
           src: nginx_kube_dashboard.conf.j2
           dest: /etc/nginx/sites-available/nginx_kube_dashboard.conf
         become: true
+        no_log: true
         notify: "restart nginx service"
       - name: Nginx Kube Dashboard Configuration | Enable site config
         file:
@@ -128,16 +138,6 @@
           state: link
         become: true
         notify: "restart nginx service"
-
-  - name: Generate and Store node joining Token
-    block:
-      - name: Get Node joining Token
-        shell: "kubeadm token create  --print-join-command"
-        register: node_joining_token
-      - name: "Add K8S Token to dummy host"
-        add_host:
-          name:   "K8S_TOKEN_HOLDER"
-          token:  "{{ node_joining_token.stdout }}"
 
   - name: Print Dashboard Login Details
     debug:

@@ -3,7 +3,7 @@
     roles:
       - common
 
-  - hosts: master
+  - hosts: master[0]
     roles:
       - master
 
