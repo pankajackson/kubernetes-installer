@@ -29,6 +29,15 @@
       - name: Pod Network Configuration | Set env FELIX_IGNORELOOSERPF=true to ignore unwanted errors
         shell: "kubectl -n kube-system set env daemonset/calico-node FELIX_IGNORELOOSERPF=true"
 
+  - name: Metrics-Server Configuration
+    block:
+      - name: Metrics-Server Configuration | Upload pod network config
+        copy:
+          src: metrics-server.yaml
+          dest: "{{ ansible_env.HOME }}/.kube"
+      - name: Metrics-Server Configuration | Install Pod network
+        shell: "kubectl apply -f {{ ansible_env.HOME }}/.kube/metrics-server.yaml"
+
   - name: Kubernetes Dashboard Configuration
     block:
       - name: Kubernetes Dashboard Configuration | Upload dashboard config
