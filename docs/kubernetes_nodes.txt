@@ -1,0 +1,23 @@
+Kubernetes Nodes
+----------------
+
+A node is a worker machine in Kubernetes, previously known as a minion. A node may be a VM or physical machine, depending on the cluster. Each node has the services necessary to run pods and is managed by the master components. The services on a node include Docker, kubelet and kube-proxy.
+
+Node Status
+-----------
+A node’s status contains the following information:
+	1. Addresses: The usage of these fields varies depending on your cloud provider or bare metal configuration.
+
+		- HostName: The hostname as reported by the node’s kernel. Can be overridden via the kubelet --hostname-override parameter.
+
+		- ExternalIP: Typically the IP address of the node that is externally routable (available from outside the cluster).
+
+		- InternalIP: Typically the IP address of the node that is routable only within the cluster.
+
+	2. Phase: [Deprecated] node phase is no longer used.
+
+	3. Condition: The conditions field describes the status of all Running nodes.
+
+	4. Capacity: Describes the resources available on the node: CPU, memory and the maximum number of pods that can be scheduled onto the node.
+
+	5. Info: General information about the node, such as kernel version, Kubernetes version (kubelet and kube-proxy version), Docker version (if used), OS name. The information is gathered by Kubelet from the node.

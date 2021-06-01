@@ -1,0 +1,25 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: nginx-ils-deployment
+spec:
+  replicas: 1
+  revisionHistoryLimit: 2
+  template:
+    metadata:
+      labels:
+        app: nginx-php
+    spec:
+      containers:
+      - name: nginx-php
+        image: nginx
+        ports:
+        - containerPort: 80
+        lifecycle:
+          postStart:
+            exec:
+              command: ["/bin/sh", "-c", 'echo "<center><h1>Welcome to ${HOSTNAME}! </h1></center>" > /usr/share/nginx/html/index.html']
+          preStop:
+            exec:
+              command: ["/usr/sbin/nginx","-s","quit"]
+              

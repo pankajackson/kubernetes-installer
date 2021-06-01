@@ -1,0 +1,40 @@
+Introduction
+------------
+Kubernetes is an open-source platform for automating deployment, scaling, and operations of application containers across clusters of hosts, providing container-centric infrastructure.
+With Kubernetes, you are able to quickly and efficiently respond to customer demand:
+	Deploy your applications quickly and predictably.
+	Scale your applications on the fly.
+	Seamlessly roll out new features.
+	Optimize use of your hardware by using only the resources you need.
+Our goal is to foster an ecosystem of components and tools that relieve the burden of running applications in public and private clouds.
+
+Kubernetes is:
+	portable: public, private, hybrid, multi-cloud
+	extensible: modular, pluggable, hookable, composable
+	self-healing: auto-placement, auto-restart, auto-replication, auto-scaling
+
+
+Why do I need Kubernetes and what can it do?
+---------------------------------------------
+At a minimum, Kubernetes can schedule and run application containers on clusters of physical or virtual machines. However, Kubernetes also allows developers to ‘cut the cord’ to physical and virtual machines, moving from a host-centric infrastructure to a container-centric infrastructure, which provides the full advantages and benefits inherent to containers. Kubernetes provides the infrastructure to build a truly container-centric development environment.
+Kubernetes satisfies a number of common needs of applications running in production, such as:
+	- co-locating helper processes, facilitating composite applications and preserving the one-application-per-container model,
+	- mounting storage systems,
+	- distributing secrets,
+	- application health checking,
+	- replicating application instances,
+	- horizontal auto-scaling,
+	- naming and discovery,
+	- load balancing,
+	- rolling updates,
+	- resource monitoring,
+	- log access and ingestion,
+	- support for introspection and debugging, and
+	- identity and authorization.
+This provides the simplicity of Platform as a Service (PaaS) with the flexibility of Infrastructure as a Service (IaaS), and facilitates portability across infrastructure providers.
+
+
+What does Kubernetes mean? K8s?
+-------------------------------
+The name Kubernetes originates from Greek, meaning “helmsman” or “pilot”, and is the root of “governor” and “cybernetic”. K8s is an abbreviation derived by replacing the 8 letters “ubernete” with 8.
+

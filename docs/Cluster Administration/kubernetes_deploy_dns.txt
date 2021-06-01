@@ -1,0 +1,15 @@
+On Master:
+----------
+Kubectl create -f DNS/skydns-rc.yaml
+Kubectl create -f DNS/skydns-svc.yaml
+
+On Nodes:
+---------
+
+vim /etc/kubernetes/kubelet
+ 
+# Add your own!
+KUBELET_ARGS="--cluster-dns=10.254.3.100 --cluster-domain=cluster.local"
+
+systemctl restart kubelet
+
