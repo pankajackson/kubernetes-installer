@@ -63,9 +63,21 @@
           dest: /etc/systemd/system/kubelet.service.d/10-kubeadm.conf.bkp
           remote_src: yes
         become: true
+      - name: Kubernetes Configuration | Gather Dockers Cgroup Driver
+        shell: |
+            docker info 2>/dev/null | sed -n 's/Cgroup Driver: \(.*\)/\1/p'
+        register: docker_cgroup_driver
+        become: true
       - name: Kubernetes Configuration | Add cgroup-driver Environment variable in kubeadm service file
         lineinfile:
           path: /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
           insertafter: '^Environment='
-          line: 'Environment="cgroup-driver=systemd/cgroup-driver=cgroupfs"'
+          line: 'Environment="KUBELET_CGROUP_ARGS=--cgroup-driver={{ docker_cgroup_driver.stdout | trim }}"'
+        become: true
+      - name: Kubernetes Configuration | Pass cgroup-driver parameter to kubelet binary
+        lineinfile:
+          path: /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
+          backrefs: yes
+          regexp: '^(ExecStart=\/usr\/bin\/kubelet(.*)$)'
+          line: '\1 $KUBELET_CGROUP_ARGS'
         become: true
