@@ -1,0 +1,11 @@
+---
+  docker_data_path: '/docker-data'
+  required_packages:
+    - docker.io
+    - vim
+    - apt-transport-https
+    - curl
+    - openssh-server
+    - kubelet
+    - kubeadm
+    - kubectl

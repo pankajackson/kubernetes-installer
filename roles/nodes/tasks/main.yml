@@ -1,0 +1,13 @@
+---
+  - name: Node Configuration
+    block:
+      - name: Node Configuration | Gather Node Joining Details
+        command: "kubeadm token create  --print-join-command"
+        register: kubernetes_join_command
+        run_once: true
+        no_log: true
+        delegate_to: "{{ groups['master'][0] }}"
+      - name: Node Configuration | Add node to cluster
+        shell: "{{ kubernetes_join_command.stdout }}"
+        become: true
+

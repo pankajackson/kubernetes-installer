@@ -1,0 +1,71 @@
+---
+  - name: Reset old Cluster if exist
+    shell: "kubeadm reset -f"
+    ignore_errors: true
+    become: true
+
+  - name: Hostname Configuration
+    hostname:
+      name: "{{ hostvars[inventory_hostname].group_names[0] }}-{{ ansible_default_ipv4.address | replace('.','') | reverse }}"
+    become: true
+
+  - name: Swap Configuration
+    block:
+      - name: Swap Configuration | Disable SWAP since kubernetes can't work with swap enabled (1/2)
+        shell: |
+          swapoff -a
+        become: true
+      - name: Swap Configuration | Disable SWAP in fstab since kubernetes can't work with swap enabled (2/2)
+        replace:
+          path: /etc/fstab
+          regexp: '^([^#].*?\sswap\s+sw\s+.*)$'
+          replace: '# \1'
+        become: true
+
+  - name: APT Configuration
+    block:
+      - name: APT Configuration | Configure Repository | Add kubernetes repository key
+        apt_key:
+          url: "https://packages.cloud.google.com/apt/doc/apt-key.gpg"
+          state: present
+        become: true
+      - name: APT Configuration | Configure Repository | Add kubernetes repository
+        apt_repository:
+          repo: deb http://apt.kubernetes.io/ kubernetes-xenial main
+          state: present
+          filename: 'kubernetes.list'
+        become: true
+      - name: APT Configuration | Install required packages
+        apt:
+          pkg: "{{ required_packages }}"
+          update_cache: yes
+        become: true
+
+  - name: Docker Configuration
+    block:
+      - name: Docker Configuration | Creates docker data directory
+        file:
+          path: "{{ docker_data_path }}"
+          state: directory
+        become: true
+      - name: Docker Configuration | Configure data path of docker
+        template:
+          src: docker.daemon.json.j2
+          dest: /etc/docker/daemon.json
+        become: true
+        notify: "restart docker service"
+
+  - name: Kubernetes Configuration
+    block:
+      - name: Kubernetes Configuration | Backup kubernetes service file
+        copy:
+          src: /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
+          dest: /etc/systemd/system/kubelet.service.d/10-kubeadm.conf.bkp
+          remote_src: yes
+        become: true
+      - name: Kubernetes Configuration | Add cgroup-driver Environment variable in kubeadm service file
+        lineinfile:
+          path: /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
+          insertafter: '^Environment='
+          line: 'Environment="cgroup-driver=systemd/cgroup-driver=cgroupfs"'
+        become: true
