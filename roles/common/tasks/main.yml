@@ -1,13 +1,24 @@
 ---
-  - name: Reset old Cluster if exist
-    shell: "kubeadm reset -f"
-    ignore_errors: true
-    become: true
-
-  - name: Hostname Configuration
-    hostname:
-      name: "{{ hostvars[inventory_hostname].group_names[0] }}-{{ ansible_default_ipv4.address | replace('.','') | reverse }}"
-    become: true
+  - name: Reset old Kubernetes Cluster if exist
+    block:
+      - name: Reset old Cluster | Remove kubernetes clusters
+        shell: "kubeadm reset -f"
+        ignore_errors: true
+        become: true
+      - name: Reset old Cluster | Reset Hostname Configuration
+        hostname:
+          name: "{{ hostvars[inventory_hostname].group_names[0] }}-{{ ansible_default_ipv4.address | replace('.','') | reverse }}"
+        become: true
+      - name: Reset old Cluster | APT Configuration | Uninstall  packages
+        apt:
+          pkg:
+            - kubeadm
+            - kubelet
+            - kubectl
+          state: absent
+          purge: true
+          force: true
+        become: true
 
   - name: Swap Configuration
     block:
@@ -39,6 +50,15 @@
         apt:
           pkg: "{{ required_packages }}"
           update_cache: yes
+        become: true
+      - name: APT Configuration | Hold/avoid auto upgrade of packages
+        dpkg_selections:
+          name: "{{ item }}"
+          selection: hold
+        with_items:
+         - kubelet
+         - kubeadm
+         - kubectl
         become: true
 
   - name: Docker Configuration

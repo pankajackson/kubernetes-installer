@@ -30,6 +30,15 @@
       - name: Pod Network Configuration | Set env FELIX_IGNORELOOSERPF=true to ignore unwanted errors
         shell: "kubectl -n kube-system set env daemonset/calico-node FELIX_IGNORELOOSERPF=true"
 
+  - name: StorageClass Configuration
+    block:
+      - name: StorageClass Configuration | Upload StorageClass config
+        copy:
+          src: local-storageclass.yaml
+          dest: "{{ ansible_env.HOME }}/.kube"
+      - name: StorageClass Configuration | Install StorageClass
+        shell: "kubectl apply -f {{ ansible_env.HOME }}/.kube/local-storageclass.yaml"
+
   - name: Metrics-Server Configuration
     block:
       - name: Metrics-Server Configuration | Upload pod network config
