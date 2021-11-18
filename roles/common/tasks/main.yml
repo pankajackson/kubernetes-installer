@@ -5,9 +5,37 @@
         shell: "kubeadm reset -f"
         ignore_errors: true
         become: true
+      - name: Reset old Cluster | Install host setup packages
+        apt:
+          pkg:
+            - toilet
+            - lolcat
+            - figlet
+            - fortune
+            - cowsay
+          state: present
+        become: true
+      - name: Reset old Cluster | setup login Banner
+        lineinfile:
+          dest: /etc/ssh/sshd_config
+          regexp: 'Banner'
+          line: "Banner /etc/issue.net"
+        become: true
+      - name: Reset old Cluster | Update ssh banner
+        shell: |
+          toilet -f term  -w 102 'Welcome to ....'  > /etc/issue.net
+          toilet -f mono12 -F border -w 500 'JACKSON.COM'  >> /etc/issue.net
+          toilet -f term  -w 102 "kube-{{ hostvars[inventory_hostname].group_names[0] }}-{{ ansible_default_ipv4.address | replace('.','') | reverse }}.{{ domain }}" >> /etc/issue.net
+          toilet -f term  -w 102 'ALERT! You are entering into a secured area! Your IP, Login Time, Username has been noted and has been sent to the server administrator! This service is restricted to authorized users only. All activities on this system are logged. Unauthorized access will be fully investigated and reported to the appropriate law enforcement agencies.' >> /etc/issue.net
+        become: true
+      - name: Reset old Cluster | Restart ssh
+        service:
+          name: ssh
+          state: restarted
+        become: true
       - name: Reset old Cluster | Reset Hostname Configuration
         hostname:
-          name: "{{ hostvars[inventory_hostname].group_names[0] }}-{{ ansible_default_ipv4.address | replace('.','') | reverse }}"
+          name: "kube-{{ hostvars[inventory_hostname].group_names[0] }}-{{ ansible_default_ipv4.address | replace('.','') | reverse }}.{{ domain }}"
         become: true
       - name: Reset old Cluster | APT Configuration | Uninstall  packages
         apt:

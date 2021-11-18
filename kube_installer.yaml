@@ -7,6 +7,6 @@
     roles:
       - master
 
-  - hosts: nodes
+  - hosts: node
     roles:
       - nodes
