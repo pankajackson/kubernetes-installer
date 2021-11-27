@@ -63,6 +63,26 @@
     until: control_plane_pods_ready is not failed
     retries: 5
 
+  - name: Post installation bug fix
+    block:
+      - name: Post installation bug fix | kubernrtes scheduler
+        block:
+          - name: Post installation bug fix | kubernrtes scheduler 1/1
+            lineinfile:
+              path: "{{ item }}"
+              backrefs: yes
+              regexp: '^([^#].*?\s+-\s+--port=0)$'
+              line: '# \1'
+            with_items:
+              - '/etc/kubernetes/manifests/kube-scheduler.yaml'
+              - '/etc/kubernetes/manifests/kube-controller-manager.yaml'
+            become: true
+      - name: Post installation bug fix | restart kubelet service
+        service:
+          name: kubelet
+          state: restarted
+        become: true
+
   - name: Dashboard Authorization Configuration
     block:
       - name: Dashboard Authorization Configuration | Create Service Account
