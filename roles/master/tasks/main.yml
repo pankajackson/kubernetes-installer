@@ -75,7 +75,7 @@
               line: '# \1'
             with_items:
               - '/etc/kubernetes/manifests/kube-scheduler.yaml'
-              - '/etc/kubernetes/manifests/kube-controller-manager.yaml'
+#              - '/etc/kubernetes/manifests/kube-controller-manager.yaml'
             become: true
       - name: Post installation bug fix | restart kubelet service
         service:
