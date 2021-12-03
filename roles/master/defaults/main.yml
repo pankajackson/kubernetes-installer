@@ -4,6 +4,10 @@
     - apache2-utils
     - openssl
 
+  loadbalancer:
+    addresses:
+      - 192.168.56.200-192.168.56.250 #Virtualbox vboxnet0 network ips
+
   nginx:
     dashboard:
       pass_file_path: /etc/nginx/.htpasswd_kube_dashboard

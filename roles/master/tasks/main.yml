@@ -48,6 +48,21 @@
       - name: Metrics-Server Configuration | Install Pod network
         shell: "kubectl apply -f {{ ansible_env.HOME }}/.kube/metrics-server.yaml"
 
+  - name: Loadbalancer MetalLB Configuration
+    block:
+      - name: Loadbalancer MetalLB Configuration | Upload MetalLB config file
+        copy:
+          src: metallb.yaml
+          dest: "{{ ansible_env.HOME }}/.kube"
+      - name: Loadbalancer MetalLB Configuration | Upload Network config file
+        template:
+          src: metallb_configmap.yaml.j2
+          dest: "{{ ansible_env.HOME }}/.kube/metallb_configmap.yaml"
+      - name: Loadbalancer MetalLB Configuration | install MetalLb
+        shell: "kubectl apply -f {{ ansible_env.HOME }}/.kube/metallb.yaml"
+      - name: Loadbalancer MetalLB Configuration | Apply MetalLb Network Config
+        shell: "kubectl apply -f {{ ansible_env.HOME }}/.kube/metallb_configmap.yaml"
+
   - name: Kubernetes Dashboard Configuration
     block:
       - name: Kubernetes Dashboard Configuration | Upload dashboard config
