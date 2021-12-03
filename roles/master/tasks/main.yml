@@ -63,6 +63,15 @@
       - name: Loadbalancer MetalLB Configuration | Apply MetalLb Network Config
         shell: "kubectl apply -f {{ ansible_env.HOME }}/.kube/metallb_configmap.yaml"
 
+  - name: NGINX Ingress Controller Configuration
+    block:
+      - name: NGINX Ingress Controller Configuration | Upload Controller config
+        copy:
+          src: ingress-nginx-controller.yaml
+          dest: "{{ ansible_env.HOME }}/.kube"
+      - name: NGINX Ingress Controller Configuration | Install Controller
+        shell: "kubectl apply -f {{ ansible_env.HOME }}/.kube/ingress-nginx-controller.yaml"
+
   - name: Kubernetes Dashboard Configuration
     block:
       - name: Kubernetes Dashboard Configuration | Upload dashboard config
