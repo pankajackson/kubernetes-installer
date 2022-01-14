@@ -106,6 +106,16 @@
           name: kubelet
           state: restarted
         become: true
+      - name: Node-Pod SNAT MASQUERADE
+        block:
+          - name: Node-Pod SNAT MASQUERADE | Upload Daemonset Config
+            template:
+              src: network_masquerader_ds.yaml.j2
+              dest: "{{ ansible_env.HOME }}/.kube/network_masquerader_ds.yaml"
+          - name: Node-Pod SNAT MASQUERADE | Apply Daemonset Config
+            shell: "kubectl apply -f {{ ansible_env.HOME }}/.kube/network_masquerader_ds.yaml"
+        when: nodenetwork is defined
+
 
   - name: Dashboard Authorization Configuration
     block:
