@@ -8,6 +8,8 @@
     addresses:
       - 192.168.56.200-192.168.56.250 #Virtualbox vboxnet0 network ips
 
+  nodenetwork: 192.168.56.0/24 #Virtualbox vboxnet0 network for Masquerading request from pod to node network
+
   nginx:
     dashboard:
       pass_file_path: /etc/nginx/.htpasswd_kube_dashboard
