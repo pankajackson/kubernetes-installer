@@ -1,5 +1,5 @@
 ---
-  docker_data_path: '/docker-data'
+  docker_data_path: '/data/docker'
   required_packages:
     - docker.io
     - vim
