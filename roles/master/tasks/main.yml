@@ -82,7 +82,7 @@
       - name: Dashboard Authorization Configuration | Create cluster role binding with service account
         shell: "kubectl create clusterrolebinding dashboard-admin -n default --clusterrole=cluster-admin   --serviceaccount=default:dashboard"
       - name: Dashboard Authorization Configuration | Generate Login Token
-        shell: 'kubectl get secret $(kubectl get serviceaccount dashboard -o jsonpath="{.secrets[0].name}") -o jsonpath="{.data.token}" | base64 --decode'
+        shell: 'kubectl create token dashboard'
         register: dashboard_login_token
         no_log: true
 
@@ -97,12 +97,8 @@
         shell: "kubectl create serviceaccount nginx-proxy -n kube-system"
       - name: Nginx Kube Dashboard Configuration | Craete Cluster role bindinng to the Nginx proxy account
         shell: "kubectl create clusterrolebinding nginx-proxy --clusterrole=cluster-admin --serviceaccount=kube-system:nginx-proxy"
-      - name: Nginx Kube Dashboard Configuration | Get Nginx proxt secret token name
-        shell: "kubectl get secrets --all-namespaces | grep nginx-proxy | awk '{ print $2 }'"
-        register: nginx_proxy_token_name
-        no_log: true
-      - name: Nginx Kube Dashboard Configuration | Get Token for Nginx proxy
-        shell: "kubectl get secret -n kube-system {{ nginx_proxy_token_name.stdout }} -o jsonpath=\"{.data.token}\" | base64 --decode"
+      - name: Nginx Kube Dashboard Configuration | Create Token for Nginx proxy
+        shell: 'kubectl -n kube-system create token nginx-proxy'
         register: nginx_proxy_token
         no_log: true
       - name: Nginx Kube Dashboard Configuration | Get Kubernetes Dashboard Cluster IP
