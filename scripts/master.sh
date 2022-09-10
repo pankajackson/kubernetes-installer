@@ -6,7 +6,8 @@ set -euxo pipefail
 
 MASTER_IP="10.0.0.10"
 NODENAME=$(hostname -s)
-POD_CIDR="192.168.0.0/16"
+#POD_CIDR="192.168.0.0/16"
+POD_CIDR="10.244.0.0/16"
 
 sudo kubeadm config images pull
 
@@ -36,11 +37,15 @@ chmod +x /vagrant/configs/join.sh
 
 kubeadm token create --print-join-command > /vagrant/configs/join.sh
 
-# Install Calico Network Plugin
+## Install Calico Network Plugin
+#
+#curl https://docs.projectcalico.org/manifests/calico.yaml -O
+#
+#kubectl apply -f calico.yaml
 
-curl https://docs.projectcalico.org/manifests/calico.yaml -O
 
-kubectl apply -f calico.yaml
+# Install Flannel Network Plugin
+kubectl apply -f https://github.com/coreos/flannel/raw/master/Documentation/kube-flannel.yml
 
 # # Install Metrics Server
 

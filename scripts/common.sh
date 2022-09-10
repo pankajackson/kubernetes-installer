@@ -14,6 +14,7 @@ sudo swapoff -a
 # keeps the swaf off during reboot
 (crontab -l 2>/dev/null; echo "@reboot /sbin/swapoff -a") | crontab - || true
 sudo apt-get update -y
+sudo apt-get upgrade -y
 # Install CRI-O Runtime
 
 OS="xUbuntu_20.04"
@@ -51,7 +52,14 @@ curl -L https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/
 sudo apt-get update
 sudo apt-get install cri-o cri-o-runc -y
 
+sudo mkdir -p /data/docker
+cat <<EOF | sudo tee /etc/crio/crio.conf
+[crio]
+root="/data/docker"
+EOF
+
 sudo systemctl daemon-reload
+sudo systemctl restart crio
 sudo systemctl enable crio --now
 
 echo "CRI runtime installed susccessfully"
