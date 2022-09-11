@@ -1,0 +1,9 @@
+---
+  - name: Cleanup System
+    include_tasks: cleanup.yml
+  - name: System Setup
+    include_tasks: system.yml
+  - name: Crio Setup
+    include_tasks: crio.yml
+  - name: Kubernetes Setup
+    include_tasks: kubernetes.yml

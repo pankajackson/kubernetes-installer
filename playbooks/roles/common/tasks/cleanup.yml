@@ -1,0 +1,24 @@
+---
+  - name: Reset old Kubernetes Cluster if exist
+    block:
+      - name: Reset old Cluster | Remove kubernetes clusters
+        shell: "kubeadm reset -f"
+        ignore_errors: true
+        become: true
+      - name: Reset old Cluster | APT Configuration | Uninstall  packages
+        apt:
+          pkg:
+            - kubeadm
+            - kubelet
+            - kubectl
+            - docker
+            - docker-engine
+            - docker.io
+            - containerd
+            - runc
+            - cri-o
+            - cri-o-runc
+          state: absent
+          purge: true
+          force: true
+        become: true

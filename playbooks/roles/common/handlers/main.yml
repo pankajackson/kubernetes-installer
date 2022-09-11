@@ -1,0 +1,9 @@
+---
+  - name: Restart and enable Crio Service
+    systemd:
+      name: crio
+      state: restarted
+      enabled: true
+      daemon_reload: yes
+    become: true
+    listen: "crio service restart"

@@ -1,0 +1,81 @@
+---
+  - name: Crio Setup | System
+    block:
+      - name: Crio Setup | System | Load kernel module
+        modprobe:
+          name: "{{ item }}"
+          state: present
+        become: true
+        with_items: "{{ crio.kernel_module }}"
+#      - name: Crio Setup | System | Create kernel module config
+#        copy:
+#          dest: "/etc/modules-load.d/crio.conf"
+#          content: |
+#            overlay
+#            br_netfilter
+#        become: true
+#      - name: Crio Setup | System | Create sysctl params config
+#        copy:
+#          dest: "/etc/sysctl.d/99-kubernetes-cri.conf"
+#          content: |
+#            net.bridge.bridge-nf-call-iptables  = 1
+#            net.ipv4.ip_forward                 = 1
+#            net.bridge.bridge-nf-call-ip6tables = 1
+#        become: true
+      - name: Crio Setup | System | Setup sysctl params config
+        ansible.posix.sysctl:
+          name: "{{ item.name }}"
+          value: "{{ item.value }}"
+          sysctl_file: /etc/sysctl.d/99-kubernetes-cri.conf
+          sysctl_set: yes
+          state: present
+          reload: yes
+        become: true
+        with_items: "{{ crio.sysctl }}"
+
+
+  - name: Crio Setup | APT
+    block:
+      - name: Crio Setup | APT | Configure Repository | Add crio repository key
+        apt_key:
+          url: "{{ item.url }}"
+          keyring: "{{ item.keyring }}"
+          state: present
+        become: true
+        with_items:
+          - url: "https://download.opensuse.org/repositories/devel:kubic:libcontainers:stable:cri-o:{{ crio.version }}/{{ crio.os }}/Release.key"
+            keyring: /etc/apt/trusted.gpg.d/libcontainers.gpg
+          - url: "https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/{{ crio.os }}/Release.key"
+            keyring: /etc/apt/trusted.gpg.d/libcontainers.gpg
+
+      - name: Crio Setup | APT | Configure Repository | Add crio repository
+        apt_repository:
+          repo: "{{ item.repo }}"
+          filename: "{{ item.filename }}"
+          state: present
+        become: true
+        with_items:
+          - repo: "deb https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/{{ crio.os }}/ /"
+            filename: /etc/apt/sources.list.d/devel:kubic:libcontainers:stable.list
+          - repo: "deb http://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable:/cri-o:/{{ crio.version }}/{{ crio.os }}/ /"
+            filename: "/etc/apt/sources.list.d/devel:kubic:libcontainers:stable:cri-o:{{ crio.version }}.list"
+      - name: Crio Setup | APT | Install required packages
+        apt:
+          pkg: "{{ item }}"
+          update_cache: yes
+        become: true
+        retries: 3
+        delay: 5
+        with_items: "{{ crio.packages }}"
+
+
+  - name: Crio Setup | Service
+    block:
+      - name: Crio Setup | Service | Configure
+        copy:
+          dest: "/etc/crio/crio.conf"
+          content: |
+            [crio]
+            root="/data/docker"
+        become: true
+        notify: "crio service restart"

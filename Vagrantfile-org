@@ -16,29 +16,27 @@ Vagrant.configure("2") do |config|
   config.vm.box_check_update = true
 
   config.vm.define "master" do |master|
-    master.vm.hostname = "master"
+    master.vm.hostname = "master-node"
     master.vm.network "private_network", ip: IP_NW + "#{IP_START}"
     master.vm.provider "virtualbox" do |vb|
         vb.memory = 4096
         vb.cpus = 2
     end
-    master.vm.provision "ansible" do |ansible|
-        ansible.playbook = "playbooks/kube-master.yml"
-    end
+    master.vm.provision "shell", path: "scripts/common.sh"
+    master.vm.provision "shell", path: "scripts/master.sh"
   end
 
   (1..NUM_WORKER_NODES).each do |i|
 
   config.vm.define "node0#{i}" do |node|
-    node.vm.hostname = "worker0#{i}"
+    node.vm.hostname = "worker-node0#{i}"
     node.vm.network "private_network", ip: IP_NW + "#{IP_START + i}"
     node.vm.provider "virtualbox" do |vb|
         vb.memory = 16384
         vb.cpus = 2
     end
-    node.vm.provision "ansible" do |ansible|
-        ansible.playbook = "playbooks/kube-worker.yml"
-    end
+    node.vm.provision "shell", path: "scripts/common.sh"
+    node.vm.provision "shell", path: "scripts/node.sh"
   end
 
   end
