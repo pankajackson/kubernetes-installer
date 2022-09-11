@@ -42,6 +42,10 @@
           keyring: "{{ item.keyring }}"
           state: present
         become: true
+        register: result
+        retries: 3
+        delay: 5
+        until: "result is not failed"
         with_items:
           - url: "https://download.opensuse.org/repositories/devel:kubic:libcontainers:stable:cri-o:{{ crio.version }}/{{ crio.os }}/Release.key"
             keyring: /etc/apt/trusted.gpg.d/libcontainers.gpg
@@ -54,6 +58,10 @@
           filename: "{{ item.filename }}"
           state: present
         become: true
+        register: result
+        retries: 3
+        delay: 5
+        until: "result is not failed"
         with_items:
           - repo: "deb https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/{{ crio.os }}/ /"
             filename: /etc/apt/sources.list.d/devel:kubic:libcontainers:stable.list
@@ -61,12 +69,13 @@
             filename: "/etc/apt/sources.list.d/devel:kubic:libcontainers:stable:cri-o:{{ crio.version }}.list"
       - name: Crio Setup | APT | Install required packages
         apt:
-          pkg: "{{ item }}"
+          pkg: "{{ crio.packages }}"
           update_cache: yes
         become: true
+        register: result
         retries: 3
         delay: 5
-        with_items: "{{ crio.packages }}"
+        until: "result is not failed"
 
 
   - name: Crio Setup | Service

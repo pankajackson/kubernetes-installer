@@ -7,6 +7,10 @@
           keyring: "{{ item.keyring }}"
           state: present
         become: true
+        register: result
+        retries: 3
+        delay: 5
+        until: "result is not failed"
         with_items:
           - url: https://packages.cloud.google.com/apt/doc/apt-key.gpg
             keyring: /usr/share/keyrings/kubernetes-archive-keyring.gpg
@@ -16,18 +20,25 @@
           filename: "{{ item.filename }}"
           state: present
         become: true
+        register: result
+        retries: 3
+        delay: 5
+        until: "result is not failed"
         with_items:
           - repo: deb [signed-by=/usr/share/keyrings/kubernetes-archive-keyring.gpg] https://apt.kubernetes.io/ kubernetes-xenial main
             filename: /etc/apt/sources.list.d/kubernetes.list
       - name: Kubernetes Setup | APT | Install required packages
         apt:
-          pkg: "{{ item }}"
+          pkg:
+            - kubelet={{ kubernetes.version }}
+            - kubectl={{ kubernetes.version }}
+            - kubeadm={{ kubernetes.version }}
           update_cache: yes
         become: true
-        with_items:
-          - kubelet={{ kubernetes.version }}
-          - kubectl={{ kubernetes.version }}
-          - kubeadm={{ kubernetes.version }}
+        register: result
+        retries: 3
+        delay: 5
+        until: "result is not failed"
 
 
   - name: Kubernetes Setup | Service
