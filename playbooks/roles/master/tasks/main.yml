@@ -1,4 +1,9 @@
 ---
-  - name: "Task on Master"
-    debug:
-      msg: "System {{ inventory_hostname }} has uuid {{ ansible_product_uuid }}"
+  - name: Kubernetes Setup
+    include_tasks: kubernetes.yml
+  - name: Flannel Setup
+    include_tasks: flannel.yml
+    when: kubernetes.network_plugin == "flannel"
+  - name: Calico Setup
+    include_tasks: calico.yml
+    when: kubernetes.network_plugin == "calico"

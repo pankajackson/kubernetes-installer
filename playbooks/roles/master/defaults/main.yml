@@ -1,2 +1,11 @@
 ---
 # defaults file for master
+kubernetes:
+  # Define Kubernetes network plugin, flannel or calico will be valid option
+  network_plugin: "flannel"
+  pod_cidr:
+    calico: "192.168.0.0/16"
+    flannel: "10.244.0.0/16"
+
+vagrant:
+  config_path: "/vagrant/configs"

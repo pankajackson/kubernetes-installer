@@ -1,11 +1,11 @@
 ---
-  - name: Reset old Kubernetes Cluster if exist
+  - name: Cleanup System
     block:
-      - name: Reset old Cluster | Remove kubernetes clusters
+      - name: Cleanup System | Remove kubernetes clusters
         shell: "kubeadm reset -f"
         ignore_errors: true
         become: true
-      - name: Reset old Cluster | APT Configuration | Uninstall  packages
+      - name: Cleanup System | APT Configuration | Uninstall  packages
         apt:
           pkg:
             - kubeadm
