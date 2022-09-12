@@ -1,4 +1,3 @@
 ---
-  - name: "Task on Nodes"
-    debug:
-      msg: "System {{ inventory_hostname }} has uuid {{ ansible_product_uuid }}"
+  - name: Kubernetes Setup
+    include_tasks: kubernetes.yml

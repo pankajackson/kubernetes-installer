@@ -39,6 +39,15 @@
         retries: 3
         delay: 5
         until: "result is not failed"
+      - name: Kubernetes Setup | APT | Hold/avoid auto upgrade of packages
+        dpkg_selections:
+          name: "{{ item }}"
+          selection: hold
+        with_items:
+         - kubelet
+         - kubeadm
+         - kubectl
+        become: true
 
 
   - name: Kubernetes Setup | Service
