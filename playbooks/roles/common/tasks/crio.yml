@@ -1,27 +1,26 @@
 ---
   - name: Crio Setup | System
     block:
+      - name: Crio Setup | System | Create kernel module config
+        lineinfile:
+          dest: "/etc/modules-load.d/crio.conf"
+          line: "{{ item }}"
+          create: yes
+        become: true
+        with_items: "{{ crio.kernel_module }}"
+      - name: Crio Setup | System | Create sysctl params config
+        lineinfile:
+          dest: "/etc/sysctl.d/99-kubernetes-cri.conf"
+          line: "{{ item.name }} = {{ item.value }}"
+          create: yes
+        become: true
+        with_items: "{{ crio.sysctl }}"
       - name: Crio Setup | System | Load kernel module
         modprobe:
           name: "{{ item }}"
           state: present
         become: true
         with_items: "{{ crio.kernel_module }}"
-#      - name: Crio Setup | System | Create kernel module config
-#        copy:
-#          dest: "/etc/modules-load.d/crio.conf"
-#          content: |
-#            overlay
-#            br_netfilter
-#        become: true
-#      - name: Crio Setup | System | Create sysctl params config
-#        copy:
-#          dest: "/etc/sysctl.d/99-kubernetes-cri.conf"
-#          content: |
-#            net.bridge.bridge-nf-call-iptables  = 1
-#            net.ipv4.ip_forward                 = 1
-#            net.bridge.bridge-nf-call-ip6tables = 1
-#        become: true
       - name: Crio Setup | System | Setup sysctl params config
         ansible.posix.sysctl:
           name: "{{ item.name }}"
