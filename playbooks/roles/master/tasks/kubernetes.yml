@@ -46,8 +46,8 @@
       - name: Kubernetes Setup | wait for pods to come up
         shell: 'kubectl wait --all-namespaces --for=condition=Ready pods --all  --timeout 600s'
         register: control_plane_pods_ready
-        retries: 5
-        delay: 5
+        retries: 10
+        delay: 20
         until: control_plane_pods_ready is not failed
 
   - name: Kubernetes Setup | Worker Nodes Setup

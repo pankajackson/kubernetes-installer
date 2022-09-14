@@ -1,7 +1,7 @@
 ---
-# defaults file for common
 system:
   domain: "jackson.com"
+
 crio:
   os: "xUbuntu_20.04"
   version: "1.23"
@@ -16,5 +16,16 @@ crio:
   packages:
     - cri-o
     - cri-o-runc
+
+docker:
+  data_dir: "/data/docker"
+  packages:
+    - docker-ce
+    - docker-ce-cli
+    - containerd.io
+    - docker-compose-plugin
+
 kubernetes:
+  # Define container runtime, crio or docker will be valid option
+  container_runtime: "crio"
   version: "1.25.0-00"

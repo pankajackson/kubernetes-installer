@@ -3,7 +3,11 @@
     include_tasks: cleanup.yml
   - name: System Setup
     include_tasks: system.yml
-  - name: Crio Setup
-    include_tasks: crio.yml
   - name: Kubernetes Setup
     include_tasks: kubernetes.yml
+  - name: Crio Setup
+    include_tasks: crio.yml
+    when: kubernetes.container_runtime == "crio"
+  - name: Docker Setup
+    include_tasks: docker.yml
+    when: kubernetes.container_runtime == "docker"
