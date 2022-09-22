@@ -1,6 +1,6 @@
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
-NUM_WORKER_NODES=2
+NUM_WORKER_NODES=3
 IP_NW="10.0.0."
 IP_START=10
 
