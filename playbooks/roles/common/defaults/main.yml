@@ -27,5 +27,7 @@ docker:
 
 kubernetes:
   # Define container runtime, crio or docker will be valid option
-  container_runtime: "crio"
+  # NOTE: crio engine and flannel network cause dns-issue in kubeernetes cluster
+  # TODO: FIX DNS ISSUE for crio engine and flannel network plugin
+  container_runtime: "docker"
   version: "1.25.0-00"
