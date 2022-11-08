@@ -1,0 +1,27 @@
+---
+  - name: Restart and enable Crio Service
+    systemd:
+      name: crio
+      state: restarted
+      enabled: true
+      daemon_reload: yes
+    become: true
+    listen: "crio service restart"
+
+  - name: Restart and enable Docker Service
+    systemd:
+      name: docker
+      state: restarted
+      enabled: true
+      daemon_reload: yes
+    become: true
+    listen: "docker service restart"
+
+  - name: Restart and enable Containerd Service
+    systemd:
+      name: containerd
+      state: restarted
+      enabled: true
+      daemon_reload: yes
+    become: true
+    listen: "containerd service restart"

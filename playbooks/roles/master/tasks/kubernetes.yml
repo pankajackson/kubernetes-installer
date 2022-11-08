@@ -1,0 +1,70 @@
+---
+  - name: Kubernetes Setup
+    block:
+      - name: Kubernetes Setup | Preflight Check
+        shell: kubeadm config images pull
+        register: k8s_preflight_status
+        become: true
+        retries: 3
+        delay: 5
+        until: "k8s_preflight_status is not failed"
+        no_log: true
+
+      - name: Kubernetes Setup | Initialize cluster
+        shell: kubeadm init --apiserver-advertise-address={{ ansible_eth1.ipv4.address }} --apiserver-cert-extra-sans={{ ansible_eth1.ipv4.address }} --pod-network-cidr={{ kubernetes.pod_cidr[kubernetes.network_plugin] }} --node-name "{{ ansible_hostname }}" --ignore-preflight-errors Swap
+        register: k8s_init_status
+        become: true
+        no_log: false
+        when: "k8s_preflight_status is not failed"
+
+      - name: Kubernetes Setup | Create .kube directory
+        file:
+          path: "{{ ansible_env.HOME }}/.kube"
+          state: directory
+        when: "k8s_preflight_status is not failed"
+
+      - name: Kubernetes Setup | Create vagrant config directory
+        file:
+          path: "{{ vagrant.config_path }}"
+          state: directory
+        become: true
+        when: "k8s_preflight_status is not failed"
+
+      - name: Kubernetes Setup | Copy admin.conf to user's kube config
+        copy:
+          src: /etc/kubernetes/admin.conf
+          dest: "{{ item }}"
+          remote_src: true
+          owner: "{{ ansible_env.USER }}"
+          group: "{{ ansible_env.USER }}"
+        become: true
+        with_items:
+          - "{{ ansible_env.HOME }}/.kube/config"
+          - "{{ vagrant.config_path }}/config"
+        when: "k8s_preflight_status is not failed"
+
+      - name: Kubernetes Setup | wait for pods to come up
+        shell: 'kubectl wait --all-namespaces --for=condition=Ready pods --all  --timeout 600s'
+        register: control_plane_pods_ready
+        retries: 10
+        delay: 20
+        until: control_plane_pods_ready is not failed
+
+  - name: Kubernetes Setup | Worker Nodes Setup
+    block:
+      - name: Kubernetes Setup | Worker Nodes Setup | Generate node join command
+        shell: kubeadm token create --print-join-command
+        register: kubernetes_join_command
+        retries: 5
+        delay: 5
+        until: kubernetes_join_command is not failed
+
+      - name: Kubernetes Setup | Worker Nodes Setup | Save node join command
+        copy:
+          dest: "{{ vagrant.config_path }}/join.sh"
+          content: "{{ kubernetes_join_command.stdout }}"
+          remote_src: true
+          owner: "{{ ansible_env.USER }}"
+          group: "{{ ansible_env.USER }}"
+          mode: a+x
+        become: true

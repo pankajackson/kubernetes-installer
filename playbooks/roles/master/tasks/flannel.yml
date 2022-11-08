@@ -1,0 +1,9 @@
+---
+  - name: Flannel Setup
+    block:
+      - name: Flannel Setup | Install
+        shell: kubectl apply -f https://github.com/coreos/flannel/raw/master/Documentation/kube-flannel.yml
+        register: result
+        retries: 5
+        delay: 5
+        until: "result is not failed"

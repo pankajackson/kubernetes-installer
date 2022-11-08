@@ -1,8 +1,0 @@
----
-  - name: Restart and enable Docker Service
-    systemd:
-      name: docker
-      state: restarted
-      enabled: true
-    become: true
-    listen: "restart docker service"

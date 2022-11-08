@@ -1,0 +1,33 @@
+---
+system:
+  domain: "jackson.com"
+
+crio:
+  os: "xUbuntu_20.04"
+  version: "1.23"
+  data_dir: "/data/docker"
+  kernel_module:
+    - overlay
+    - br_netfilter
+  sysctl:
+    - { name: 'net.bridge.bridge-nf-call-iptables', value: 1 }
+    - { name: 'net.ipv4.ip_forward', value: 1 }
+    - { name: 'net.bridge.bridge-nf-call-ip6tables', value: 1 }
+  packages:
+    - cri-o
+    - cri-o-runc
+
+docker:
+  data_dir: "/data/docker"
+  packages:
+    - docker-ce
+    - docker-ce-cli
+    - containerd.io
+    - docker-compose-plugin
+
+kubernetes:
+  # Define container runtime, crio or docker will be valid option
+  # NOTE: crio engine and flannel network cause dns-issue in kubeernetes cluster
+  # TODO: FIX DNS ISSUE for crio engine and flannel network plugin
+  container_runtime: "docker"
+  version: "1.25.0-00"

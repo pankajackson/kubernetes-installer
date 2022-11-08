@@ -1,0 +1,24 @@
+---
+  - name: Cleanup System
+    block:
+      - name: Cleanup System | Remove kubernetes clusters
+        shell: "kubeadm reset -f"
+        ignore_errors: true
+        become: true
+      - name: Cleanup System | APT Configuration | Uninstall  packages
+        apt:
+          pkg:
+            - kubeadm
+            - kubelet
+            - kubectl
+            - docker
+            - docker-engine
+            - docker.io
+            - containerd
+            - runc
+            - cri-o
+            - cri-o-runc
+          state: absent
+          purge: true
+          force: true
+        become: true
