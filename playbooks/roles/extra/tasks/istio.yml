@@ -1,0 +1,34 @@
+---
+# Ref: https://istio.io/latest/docs/setup/getting-started/#download
+  - name: Istio Setup | Installation
+    block:
+      - name: Istio Setup | Installation | Clean previous Installation if exist
+        shell:
+          cmd: "rm -rf istio*"
+          chdir: "{{ ansible_env.HOME }}"
+      - name: Istio Setup | Installation | Install cli
+        shell:
+          cmd: "curl -L https://istio.io/downloadIstio | sh -"
+          chdir: "{{ ansible_env.HOME }}"
+      - name: Istio Setup | Installation | rename installation directory
+        shell:
+          cmd: "mv istio* istio"
+          chdir: "{{ ansible_env.HOME }}"
+      - name: Istio Setup | Installation | update PATH env
+        lineinfile:
+          path: "{{ ansible_env.HOME }}/.bashrc"
+          insertafter: 'EOF'
+          line: "export PATH={{ ansible_env.HOME }}/istio/bin:$PATH"
+      - name: Istio Setup | Installation | Install with Profile
+        shell: "{{ ansible_env.HOME }}/istio/bin/istioctl install --set profile={{ istio.profile }} -y"
+  - name: Istio Setup | Enable automatic Envoy sidecar proxies injection
+    block:
+      - name: Istio Setup | Enable automatic Envoy sidecar proxies injection | namespace "default"
+        shell: "kubectl label namespace default istio-injection=enabled"
+
+# helm install \
+#     --namespace istio-system \
+#     kiali-server \
+#     kiali/kiali-server
+
+# Kiali ref: https://stackoverflow.com/questions/63372998/how-to-install-kiali-dashboard-with-prometheus-in-place-in-gke-with-default-isti

@@ -1,0 +1,7 @@
+---
+# defaults file for extra
+service_mesh:
+  enabled: true
+  service: istio # Possible values: istio
+istio:
+  profile: default
