@@ -1,0 +1,4 @@
+---
+  - name: Istio Installation
+    include_tasks: istio.yml
+    when: (service_mesh.enabled) and (service_mesh.service == 'istio')

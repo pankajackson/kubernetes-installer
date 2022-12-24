@@ -11,3 +11,6 @@
     roles:
       - worker
 
+  - hosts: master
+    roles:
+      - extra

@@ -1,0 +1,7 @@
+---
+# defaults file for extra
+service_mesh:
+  enabled: false # Disabled as other components (Kiali Prometheus grafana etc) are not ready
+  service: istio # Possible values: istio
+istio:
+  profile: default
