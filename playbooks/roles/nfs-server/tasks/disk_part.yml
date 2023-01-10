@@ -1,0 +1,45 @@
+---
+  - name: Disk Setup | Install parted
+    package:
+      name: parted
+      state: present
+    become: true
+
+  - name: Disk Setup | Sync Disk/Fix GPT PMBR size mismatch
+    shell: |
+      (
+        echo w # Write changes
+      ) | sudo fdisk {{ disk_part.device }}
+    become: true
+
+  - name: "Disk Setup | Read device information {{ disk_part.device }}"
+    parted:
+      device: "{{ disk_part.device }}"
+      unit: MiB
+    register: device_info
+    become: true
+
+  - name: "Disk Setup | Add new partition {{ disk_part.device }}{{ device_info.partitions[-1].num + 1}}"
+    parted:
+      device: "{{ disk_part.device }}"
+      number: "{{ device_info.partitions[-1].num + 1}}"
+      part_type: "{{ disk_part.type }}"
+      label: "{{ disk_part.label }}"
+      state: present
+      part_end: "100%"
+      part_start: "{{ device_info.partitions[-1].end + 1 }}MiB"
+    become: true
+
+  - name: Disk Setup | Create Filesystem
+    filesystem:
+      fstype: "{{ disk_part.fs }}"
+      dev: "{{ disk_part.device }}{{ device_info.partitions[-1].num + 1}}"
+    become: true
+
+  - name: Disk Setup | Mount Partition
+    mount:
+      fstype: "{{ disk_part.fs }}"
+      src: "{{ disk_part.device }}{{ device_info.partitions[-1].num + 1}}"
+      path: "{{ disk_part.mount }}"
+      state: mounted
+    become: true

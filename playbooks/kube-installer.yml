@@ -7,10 +7,18 @@
     roles:
       - master
 
-  - hosts: all:!master
+  - hosts: all:!master:!storage
     roles:
       - worker
 
   - hosts: master
     roles:
       - extra
+
+  - hosts: storage
+    roles:
+      - nfs-server
+
+  - hosts: all:!storage
+    roles:
+      - nfs-client

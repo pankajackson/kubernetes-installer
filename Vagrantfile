@@ -18,6 +18,16 @@ Vagrant.configure("2") do |config|
         end
     end
 
+    config.vm.define "storage" do |storage|
+        storage.vm.hostname = "storage"
+        storage.vm.network "private_network", ip: IP_NW + "#{IP_START + 10}"
+        storage.vm.provider "virtualbox" do |vb|
+            vb.memory = 1024
+            vb.cpus = 1
+        end
+        storage.disksize.size = '250GB'
+    end
+
     (1..NUM_WORKER_NODES).each do |i|
         config.vm.define "worker0#{i}" do |node|
             node.vm.hostname = "worker0#{i}"

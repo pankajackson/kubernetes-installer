@@ -1,0 +1,27 @@
+---
+  - name: Configure | get Self Hosted NFS server address
+    shell: "ip addr  | grep 'state UP' -A3 | grep eth1 -A2  | tail -n1 | awk '{print $2}' | cut -f1  -d'/'"
+    delegate_to: "storage"
+    register: storage_ip
+
+  - name: Configure | Mounting NFS Exports
+    mount:
+      fstype: "{{ item['fstype'] }}"
+      opts: "{{ (item['opts']|join(','))|default(omit) }}"
+      path: "{{ item['path'] }}"
+      src: "{{ item['src'] }}"
+      state: "{{ item['state'] }}"
+    become: true
+    with_items: '{{ nfs_client_mounts }}'
+    when: nfs_client_mounts is defined
+
+  - name: Configure | Mounting Self Hosted NFS Exports
+    mount:
+      fstype: "{{ item['fstype'] }}"
+      opts: "{{ (item['opts']|join(','))|default(omit) }}"
+      path: "{{ item['path'] }}"
+      src: "{{ storage_ip.stdout }}:{{ item['src'] }}"
+      state: "{{ item['state'] }}"
+    become: true
+    with_items: '{{ self_hosted_nfs_client_mounts }}'
+    when: self_hosted_nfs_client_mounts is defined
