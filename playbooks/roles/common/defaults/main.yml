@@ -30,4 +30,4 @@ kubernetes:
   # NOTE: crio engine and flannel network cause dns-issue in kubeernetes cluster
   # TODO: FIX DNS ISSUE for crio engine and flannel network plugin
   container_runtime: "docker"
-  version: "1.25.0-00"
+  version: "1.28.2-00"
