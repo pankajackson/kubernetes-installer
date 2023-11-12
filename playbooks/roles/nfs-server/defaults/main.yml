@@ -14,7 +14,7 @@
 #### define the folder permissions to set which also apply to client mounts
 disk_part:
   create: true
-  device: "/dev/sda"
+  device: "/dev/vda"
   mount: "/data"
   type: "primary"
   label: "gpt"

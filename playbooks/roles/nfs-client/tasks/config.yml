@@ -1,6 +1,6 @@
 ---
   - name: Configure | get Self Hosted NFS server address
-    shell: "ip addr  | grep 'state UP' -A3 | grep eth1 -A2  | tail -n1 | awk '{print $2}' | cut -f1  -d'/'"
+    shell: "ip addr  | grep 'state UP' -A4 | grep eth1 -A2  | tail -n1 | awk '{print $2}' | cut -f1  -d'/'"
     delegate_to: "storage"
     register: storage_ip
 
