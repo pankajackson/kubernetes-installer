@@ -17,7 +17,7 @@ WORKER_NODES_COUNT  = 1
 CPUS_STORAGE_NODE = 1
 MEMORY_STORAGE_NODE  = 1024
 
-IP_NW="10.1.0."
+IP_NW="10.0.0."
 IP_START=10
 
 Vagrant.configure("2") do |config|
