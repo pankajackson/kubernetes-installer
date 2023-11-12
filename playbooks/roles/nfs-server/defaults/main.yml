@@ -14,7 +14,6 @@
 #### define the folder permissions to set which also apply to client mounts
 disk_part:
   create: true
-  device: "/dev/sda" # libvirt --> "/dev/vda", virtualbox --> /dev/sda
   mount: "/data"
   type: "primary"
   label: "gpt"
