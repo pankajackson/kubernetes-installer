@@ -1,6 +1,7 @@
 ---
   - name: Configure | get Self Hosted NFS server address
-    shell: "ip addr  | grep 'state UP' -A3 | grep eth1 -A2  | tail -n1 | awk '{print $2}' | cut -f1  -d'/'"
+    shell: |
+      ip a l eth1 | grep -o "inet [0-9]*\.[0-9]*\.[0-9]*\.[0-9]*" | grep -o "[0-9]*\.[0-9]*\.[0-9]*\.[0-9]*"
     delegate_to: "storage"
     register: storage_ip
 

@@ -26,6 +26,7 @@ https://discuss.hashicorp.com/t/vagrant-2-2-18-osx-11-6-cannot-create-private-ne
 To provision the cluster, execute the following commands.
 
 ```shell
+sudo apt install nfs-common nfs-kernel-server
 git clone https://pankajackson@bitbucket.org/pankajackson/kubernetes-installer.git
 cd kubernetes-installer
 vagrant up
