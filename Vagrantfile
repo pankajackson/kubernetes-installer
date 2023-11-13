@@ -1,7 +1,7 @@
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
 ENV['VAGRANT_NO_PARALLEL'] = 'yes'
-ENV['VAGRANT_DEFAULT_PROVIDER'] = 'virtualbox' # virtualbox or libvirt
+ENV['VAGRANT_DEFAULT_PROVIDER'] = 'libvirt' # virtualbox or libvirt
 
 VAGRANT_BOX         = "bento/ubuntu-22.04"
 VAGRANT_BOX_VERSION = "202309.08.0"
@@ -40,8 +40,13 @@ Vagrant.configure("2") do |config|
 
     # Master
     config.vm.define "master" do |master|
+        ip_address = IP_NW + "#{IP_START}"
         master.vm.hostname = "master"
-        master.vm.network "private_network", ip: IP_NW + "#{IP_START}"
+        master.vm.network "private_network", ip: ip_address #, auto_config: true
+        # TODO: [KUBE-23] Ref: https://github.com/hashicorp/vagrant/issues/12984
+        # master.vm.base_address = ip_address
+        # master.ssh.host = ip_address
+        # master.ssh.port = 22
 
         # Master VirtualBox
         master.vm.provider :virtualbox do |vbox|
@@ -59,9 +64,10 @@ Vagrant.configure("2") do |config|
 
     # Storage
     config.vm.define "storage" do |storage|
+        ip_address = IP_NW + "#{IP_START + 10}"
         storage.vm.hostname   = "storage"
         storage.disksize.size = '250GB'
-        storage.vm.network "private_network", ip: IP_NW + "#{IP_START + 10}"
+        storage.vm.network "private_network", ip: ip_address
 
         # Storage VirtualBox
         storage.vm.provider :virtualbox do |vbox|
@@ -81,8 +87,9 @@ Vagrant.configure("2") do |config|
     (1..WORKER_NODES_COUNT).each do |i|
         # Worker
         config.vm.define "worker0#{i}" do |node|
+            ip_address = IP_NW + "#{IP_START + i}"
             node.vm.hostname = "worker0#{i}"
-            node.vm.network "private_network", ip: IP_NW + "#{IP_START + i}"
+            node.vm.network "private_network", ip: ip_address
 
             # Worker VirtualBox
             node.vm.provider :virtualbox do |vbox|
