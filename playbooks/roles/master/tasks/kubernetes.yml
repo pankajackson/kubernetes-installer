@@ -41,6 +41,7 @@
         with_items:
           - "{{ ansible_env.HOME }}/.kube/config"
           - "{{ vagrant.config_path }}/config"
+          - "{{ vagrant.shared_config_path }}/config"
         when: "k8s_preflight_status is not failed"
 
       - name: Kubernetes Setup | wait for pods to come up
@@ -61,10 +62,13 @@
 
       - name: Kubernetes Setup | Worker Nodes Setup | Save node join command
         copy:
-          dest: "{{ vagrant.config_path }}/join.sh"
+          dest: "{{ item }}"
           content: "{{ kubernetes_join_command.stdout }}"
           remote_src: true
           owner: "{{ ansible_env.USER }}"
           group: "{{ ansible_env.USER }}"
           mode: a+x
         become: true
+        with_items:
+          - "{{ vagrant.config_path }}/join.sh"
+          - "{{ vagrant.shared_config_path }}/join.sh"

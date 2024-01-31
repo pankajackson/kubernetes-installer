@@ -11,5 +11,5 @@ kubernetes:
   cluster_cidr: 10.0.0.0/24 #Virtualbox vboxnet0 network for Masquerading request from pod to node network
   pod_network_masquerader: true
 
-vagrant:
-  config_path: "/vagrant/configs"
+# vagrant:
+#   config_path: "/vagrant/configs"

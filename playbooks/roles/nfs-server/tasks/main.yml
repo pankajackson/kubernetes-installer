@@ -1,19 +1,19 @@
 ---
 # tasks file for ansible-nfs-server
   - name: Set Facts
-    include: set-facts.yml
+    include_tasks: set-facts.yml
 
   - name: Disk Setup
-    include: disk_part.yml
+    include_tasks: disk_part.yml
     when: disk_part.create
 
   - name: Debian Installation
-    include: debian.yml
+    include_tasks: debian.yml
     when: ansible_os_family == "Debian"
 
   - name: Redhat Installation
-    include: redhat.yml
+    include_tasks: redhat.yml
     when: ansible_os_family == "RedHat"
 
   - name: Configure
-    include: config.yml
+    include_tasks: config.yml

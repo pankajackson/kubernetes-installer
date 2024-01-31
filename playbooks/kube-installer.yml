@@ -1,24 +1,27 @@
 ---
-  - hosts: all
-    roles:
-      - common
+- hosts: all
+  roles:
+    - role: common
 
-  - hosts: master
-    roles:
-      - master
+- hosts: storage
+  roles:
+    - role: nfs-server
+      when: not worker_only | bool
 
-  - hosts: all:!master:!storage
-    roles:
-      - worker
+- hosts: all:!storage
+  roles:
+    - role: nfs-client
 
-  - hosts: master
-    roles:
-      - extra
+- hosts: master
+  roles:
+    - role: master
+      when: not worker_only | bool
 
-  - hosts: storage
-    roles:
-      - nfs-server
+- hosts: all:!master:!storage
+  roles:
+    - role: worker
 
-  - hosts: all:!storage
-    roles:
-      - nfs-client
+- hosts: master
+  roles:
+    - role: extra
+      when: not worker_only

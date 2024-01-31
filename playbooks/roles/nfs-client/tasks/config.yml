@@ -1,9 +1,9 @@
 ---
-  - name: Configure | get Self Hosted NFS server address
-    shell: |
-      ip a l eth1 | grep -o "inet [0-9]*\.[0-9]*\.[0-9]*\.[0-9]*" | grep -o "[0-9]*\.[0-9]*\.[0-9]*\.[0-9]*"
-    delegate_to: "storage"
-    register: storage_ip
+  # - name: Configure | get Self Hosted NFS server address
+  #   shell: |
+  #     ip a l eth1 | grep -o "inet [0-9]*\.[0-9]*\.[0-9]*\.[0-9]*" | grep -o "[0-9]*\.[0-9]*\.[0-9]*\.[0-9]*"
+  #   delegate_to: "storage"
+  #   register: storage_ip
 
   - name: Configure | Mounting NFS Exports
     mount:
@@ -21,7 +21,7 @@
       fstype: "{{ item['fstype'] }}"
       opts: "{{ (item['opts']|join(','))|default(omit) }}"
       path: "{{ item['path'] }}"
-      src: "{{ storage_ip.stdout }}:{{ item['src'] }}"
+      src: "{{ storage_ip }}:{{ item['src'] }}"
       state: "{{ item['state'] }}"
     become: true
     with_items: '{{ self_hosted_nfs_client_mounts }}'
