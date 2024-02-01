@@ -24,6 +24,7 @@ CPUS_STORAGE_NODE   = 1
 MEMORY_STORAGE_NODE = 1024
 
 NETWORK="10.1.0.X"
+HOST_ONLY_NETWORK="192.168.100.X"
 START_IP=10
 STORAGE_IP=50
 
@@ -64,9 +65,10 @@ Vagrant.configure("2") do |config|
         # Master
         config.vm.define "master" do |master|
             ip_address = NETWORK.gsub('X', "#{START_IP}")
+            host_only_ip_address = HOST_ONLY_NETWORK.gsub('X', "#{START_IP}")
             master.vm.hostname = "master"
-            master.vm.network "private_network", type: "dhcp"
             master.vm.network "public_network", bridge: DEFAULT_NETWORK_INTERFACE, ip: ip_address #, auto_config: true
+            master.vm.network "private_network", ip: host_only_ip_address
             # TODO: [KUBE-23] Ref: https://github.com/hashicorp/vagrant/issues/12984
             # master.vm.base_address = ip_address
             # master.ssh.host = ip_address
@@ -89,10 +91,11 @@ Vagrant.configure("2") do |config|
         # Storage
         config.vm.define "storage" do |storage|
             ip_address = NETWORK.gsub('X', "#{STORAGE_IP}")
+            host_only_ip_address = HOST_ONLY_NETWORK.gsub('X', "#{START_IP}")
             storage.vm.hostname   = "storage"
             storage.disksize.size = '250GB'
-            storage.vm.network "private_network", type: "dhcp"
             storage.vm.network "public_network", bridge: DEFAULT_NETWORK_INTERFACE, ip: ip_address
+            storage.vm.network "private_network", ip: host_only_ip_address
 
             # Storage VirtualBox
             storage.vm.provider :virtualbox do |vbox|
@@ -114,9 +117,10 @@ Vagrant.configure("2") do |config|
         # Worker
         config.vm.define "worker0#{i}" do |node|
             ip_address = NETWORK.gsub('X', "#{START_IP + i}")
+            host_only_ip_address = HOST_ONLY_NETWORK.gsub('X', "#{START_IP}")
             node.vm.hostname = "worker0#{i}"
-            node.vm.network "private_network", type: "dhcp"
             node.vm.network "public_network", bridge: DEFAULT_NETWORK_INTERFACE, ip: ip_address
+            node.vm.network "private_network", ip: host_only_ip_address
 
             # Worker VirtualBox
             node.vm.provider :virtualbox do |vbox|
