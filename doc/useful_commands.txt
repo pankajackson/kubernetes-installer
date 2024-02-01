@@ -14,3 +14,12 @@ List VMs:
     VBoxManage list vms
 Delete VMs:
     VBoxManage unregistervm --delete <UUID_or_Name> 
+
+
+for Ansible UTF requirement:
+    sudo echo "LC_ALL=en_IN.UTF-8" >> /etc/environment
+    sudo echo "en_IN.UTF-8 UTF-8" >> /etc/locale.gen
+    sudo echo "LANG=en_IN.UTF-8" > /etc/locale.conf
+    sudo apt-get clean && apt-get update -y
+    sudo apt-get install locales -y
+    sudo locale-gen en_IN.UTF-8
