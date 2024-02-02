@@ -12,24 +12,29 @@ VAGRANT_BOX         = "bento/ubuntu-22.04"
 VAGRANT_BOX_VERSION = "202309.08.0"
 VAGRANT_BOX_CHECK_UPDATE = false
 
-CPUS_MASTER_NODE    = 2
-MEMORY_MASTER_NODE  = 4096
+MASTER_CPU      = 2
+MASTER_MEMORY   = 4096
 
-CPUS_WORKER_NODE    = 2
-MEMORY_WORKER_NODE  = 4096
-WORKER_NODES_COUNT  = 1
-WORKER_ONLY         = false
+WORKER_CPU      = 2
+WORKER_MEMORY   = 4096
+WORKER_COUNT    = 1
+WORKER_ONLY     = false
 
-CPUS_STORAGE_NODE   = 1
-MEMORY_STORAGE_NODE = 1024
+STORAGE_CPU     = 1
+STORAGE_MEMORY  = 1024
+STORAGE_IP      = 50
 
-NETWORK="10.1.0.X"
-START_IP=10
-STORAGE_IP=50
+NETWORK     = "10.1.0.X"
+START_IP    = 10
 
 
 # Get extra arguments from cli
 opts = GetoptLong.new(
+    [ '--master-cpu', GetoptLong::OPTIONAL_ARGUMENT ],
+    [ '--master-memory', GetoptLong::OPTIONAL_ARGUMENT ],
+    [ '--worker-cpu', GetoptLong::OPTIONAL_ARGUMENT ],
+    [ '--worker-memory', GetoptLong::OPTIONAL_ARGUMENT ],
+    [ '--worker-count', GetoptLong::OPTIONAL_ARGUMENT ],
     [ '--worker-only', GetoptLong::OPTIONAL_ARGUMENT ],
     [ '--start-ip', GetoptLong::OPTIONAL_ARGUMENT ],
 )
@@ -37,8 +42,18 @@ opts.ordering=(GetoptLong::REQUIRE_ORDER)
 
 opts.each do |opt, arg|
     case opt
+        when '--master-cpu'
+            MASTER_CPU=arg.to_i
+        when '--master-memory'
+            MASTER_MEMORY=arg.to_i
+        when '--worker-cpu'
+            WORKER_CPU=arg.to_i
+        when '--worker-memory'
+            WORKER_MEMORY=arg.to_i
+        when '--worker-count'
+            WORKER_COUNT=arg.to_i
         when '--worker-only'
-            WORKER_ONLY=true
+            WORKER_ONLY=arg.to_i
         when '--start-ip'
             START_IP=arg.to_i
     end
@@ -77,14 +92,14 @@ Vagrant.configure("2") do |config|
             # Master VirtualBox
             master.vm.provider :virtualbox do |vbox|
                 vbox.name   = "master"
-                vbox.cpus   = CPUS_MASTER_NODE
-                vbox.memory = MEMORY_MASTER_NODE
+                vbox.cpus   = MASTER_CPU
+                vbox.memory = MASTER_MEMORY
             end
 
             # Master LibVirt
             master.vm.provider :libvirt do |libvirt|
-                libvirt.cpus   = CPUS_MASTER_NODE
-                libvirt.memory = MEMORY_MASTER_NODE
+                libvirt.cpus   = MASTER_CPU
+                libvirt.memory = MASTER_MEMORY
             end
         end
 
@@ -98,20 +113,20 @@ Vagrant.configure("2") do |config|
             # Storage VirtualBox
             storage.vm.provider :virtualbox do |vbox|
                 vbox.name   = "storage"
-                vbox.cpus   = CPUS_STORAGE_NODE
-                vbox.memory = MEMORY_STORAGE_NODE
+                vbox.cpus   = STORAGE_CPU
+                vbox.memory = STORAGE_MEMORY
             end
 
             # Storage LibVirt
             storage.vm.provider :libvirt do |libvirt|
-                libvirt.cpus    = CPUS_STORAGE_NODE
-                libvirt.memory  = MEMORY_STORAGE_NODE
+                libvirt.cpus    = STORAGE_CPU
+                libvirt.memory  = STORAGE_MEMORY
                 libvirt.machine_virtual_size = 250
             end
         end
     end
 
-    (1..WORKER_NODES_COUNT).each do |i|
+    (1..WORKER_COUNT).each do |i|
         # Worker
         config.vm.define "worker0#{i}" do |node|
             ip_address = NETWORK.gsub('X', "#{START_IP + i}")
@@ -121,18 +136,18 @@ Vagrant.configure("2") do |config|
             # Worker VirtualBox
             node.vm.provider :virtualbox do |vbox|
                 vbox.name   = "worker0#{i}"
-                vbox.cpus   = CPUS_WORKER_NODE
-                vbox.memory = MEMORY_WORKER_NODE
+                vbox.cpus   = WORKER_CPU
+                vbox.memory = WORKER_MEMORY
             end
     
             # Worker LibVirt
             node.vm.provider :libvirt do |libvirt|
-                libvirt.cpus   = CPUS_WORKER_NODE
-                libvirt.memory = MEMORY_WORKER_NODE
+                libvirt.cpus   = WORKER_CPU
+                libvirt.memory = WORKER_MEMORY
             end
 
             # Parallel Provision
-            if i == WORKER_NODES_COUNT
+            if i == WORKER_COUNT
                 node.vm.provision "ansible" do |ansible|
                     ansible.limit = "all"
                     ansible.playbook = "playbooks/kube-installer.yml"
