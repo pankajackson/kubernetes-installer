@@ -24,7 +24,7 @@ STORAGE_CPU     = 1
 STORAGE_MEMORY  = 1024
 STORAGE_IP      = 50
 
-NETWORK     = "10.1.0.X"
+NETWORK     = "10.0.0.X"
 START_IP    = 10
 
 
@@ -53,7 +53,7 @@ opts.each do |opt, arg|
         when '--worker-count'
             WORKER_COUNT=arg.to_i
         when '--worker-only'
-            WORKER_ONLY=arg.to_i
+            WORKER_ONLY=true
         when '--start-ip'
             START_IP=arg.to_i
     end
