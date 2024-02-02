@@ -21,6 +21,25 @@ echo "* 0.0.0.0/0 ::/0" | sudo tee -a /etc/vbox/networks.conf
 So that the host only networks can be in any range, not just 192.168.56.0/21 as described here:
 https://discuss.hashicorp.com/t/vagrant-2-2-18-osx-11-6-cannot-create-private-network/30984/23
 
+
+## NetPlan Setup (Optional)
+
+To make kubernetes network secure try to create virtual IP in your local machine subnet with netplan tool. Below is an example of how you could do it.
+
+edit file `/etc/netplan/01-network-manager-all.yaml` and Add extra/Virtual IP address (eg: 10.0.0.1) in same adapter in all the machines.
+```shell
+network:
+  version: 2
+  renderer: NetworkManager
+  ethernets:
+    enp0s31f6:
+      dhcp4: no
+      addresses: [192.168.1.8/24, 10.0.0.1/24]
+      gateway4: 192.168.1.1
+      nameservers:
+        addresses: [192.168.1.8, 8.8.8.8]
+```
+
 ## Usage/Examples
 
 To provision the cluster, execute the following commands.
@@ -31,6 +50,24 @@ git clone https://pankajackson@bitbucket.org/pankajackson/kubernetes-installer.g
 cd kubernetes-installer
 vagrant up
 ```
+
+To provision the cluster along with node configurations in extra arguments, execute the following commands.
+```shell
+vagrant --master-cpu=4 --worker-cpu=6 --worker-memory=6000 --worker-count=2  up
+```
+
+To provision the cluster in multiple physical machine, execute the following commands.
+```shell
+# execute in main physical that will deploy Kube Master Node 
+vagrant --master-cpu=4 --worker-cpu=6 --worker-memory=6000 --worker-count=2  up
+
+# execute in other physical that will deploy Kube Worker Node
+vagrant --worker-only --worker-cpu=2 --worker-memory=16000 --worker-count=3 --start-ip=20 up
+```
+NOTE: 
+- --worker-only flag will connect to already created master Node instead of creating new Master Node
+- Make Sure to change value of --start-ip in every physical machine to avoid duplicate IPs in two kube worker node
+
 
 ## Set Kubeconfig file variable
 

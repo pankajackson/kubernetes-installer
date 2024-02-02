@@ -12,11 +12,19 @@ nfs_client_mounts: []
   #   state: 'mounted'
 
 self_hosted_nfs_client_mounts:
-   - mount:
-     fstype: 'nfs'
-     opts:
-       - 'rw'
-       - 'sync'
-     path: '/data/cloud-path-provisioner'
-     src: '/data/cloud-path-provisioner'
-     state: 'mounted'
+  - mount:
+    fstype: 'nfs'
+    opts:
+      - 'rw'
+      - 'sync'
+    path: "{{ vagrant.shared_config_path }}"
+    src: "{{ vagrant.shared_config_path }}"
+    state: 'mounted'
+  - mount:
+    fstype: 'nfs'
+    opts:
+      - 'rw'
+      - 'sync'
+    path: '/data/cloud-path-provisioner'
+    src: '/data/cloud-path-provisioner'
+    state: 'mounted'

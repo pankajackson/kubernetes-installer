@@ -39,7 +39,7 @@
     block:
       - name: System Setup | HOST | Reset Hostname Configuration
         hostname:
-          name: "kube-{{ ansible_hostname }}-{{ ansible_eth1.ipv4.address | replace('.','') | reverse }}.{{ system.domain }}"
+          name: "kube-{{ ansible_eth1.ipv4.address | replace('.','') | reverse }}.{{ system.domain }}"
         become: true
 
 

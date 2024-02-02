@@ -29,6 +29,16 @@ nfs_server_exports:
           - 'no_subtree_check'
           - 'no_root_squash'
     mode: "u=rwx,g=rwx,o=rwx"
+    path: "{{ vagrant.shared_config_path }}"
+  - export:
+    access:
+      - hostname: '*'
+        options:
+          - 'rw'
+          - 'sync'
+          - 'no_subtree_check'
+          - 'no_root_squash'
+    mode: "u=rwx,g=rwx,o=rwx"
     path: '/data/cloud-path-provisioner'
   - export:
     access:
