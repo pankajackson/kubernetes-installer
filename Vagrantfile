@@ -31,18 +31,23 @@ STORAGE_IP=50
 
 # Get extra arguments from cli
 opts = GetoptLong.new(
-    [ '--worker-only', GetoptLong::OPTIONAL_ARGUMENT ]
+    [ '--worker-only', GetoptLong::OPTIONAL_ARGUMENT ],
+    [ '--start-ip', GetoptLong::OPTIONAL_ARGUMENT ],
 )
 opts.ordering=(GetoptLong::REQUIRE_ORDER)
+
 opts.each do |opt, arg|
     case opt
         when '--worker-only'
             WORKER_ONLY=true
+        when '--start-ip'
+            START_IP=arg.to_i
     end
 end
 
 puts "Worker Only = #{WORKER_ONLY}"
 puts "Default network Interface = #{DEFAULT_NETWORK_INTERFACE}"
+puts "Start IP = #{START_IP}"
 
 Vagrant.configure("2") do |config|
 
