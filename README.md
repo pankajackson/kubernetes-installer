@@ -62,7 +62,7 @@ To provision the cluster in multiple physical machine, execute the following com
 vagrant --master-cpu=4 --worker-cpu=6 --worker-memory=6000 --worker-count=2  up
 
 # execute in other physical that will deploy Kube Worker Node
-vagrant --worker-only --worker-cpu=2 --worker-memory=16000 --worker-count=3 --start-ip=20 up
+vagrant --worker-only --worker-cpu=2 --worker-memory=16384 --worker-count=3 --start-ip=20 up
 ```
 NOTE: 
 - --worker-only flag will connect to already created master Node instead of creating new Master Node
