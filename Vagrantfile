@@ -15,14 +15,14 @@ VAGRANT_BOX_CHECK_UPDATE = false
 MASTER_CPU      = 2
 MASTER_MEMORY   = 4096
 
-WORKER_CPU      = 2
-WORKER_MEMORY   = 4096
-WORKER_COUNT    = 1
+WORKER_CPU      = 4
+WORKER_MEMORY   = 32786
+WORKER_COUNT    = 5
 WORKER_ONLY     = false
 
 STORAGE_CPU     = 1
 STORAGE_MEMORY  = 1024
-STORAGE_IP      = 50
+STORAGE_IP      = 254
 
 NETWORK     = "10.0.0.X"
 START_IP    = 10
@@ -128,14 +128,14 @@ Vagrant.configure("2") do |config|
 
     (1..WORKER_COUNT).each do |i|
         # Worker
-        config.vm.define "worker0#{i}" do |node|
+        config.vm.define "worker#{format('%02d', i)}" do |node|
             ip_address = NETWORK.gsub('X', "#{START_IP + i}")
-            node.vm.hostname = "worker0#{i}"
+            node.vm.hostname = "worker#{format('%02d', i)}"
             node.vm.network "public_network", bridge: DEFAULT_NETWORK_INTERFACE, ip: ip_address
 
             # Worker VirtualBox
             node.vm.provider :virtualbox do |vbox|
-                vbox.name   = "worker0#{i}"
+                vbox.name   = "worker#{format('%02d', i)}"
                 vbox.cpus   = WORKER_CPU
                 vbox.memory = WORKER_MEMORY
             end
