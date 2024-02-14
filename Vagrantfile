@@ -82,7 +82,6 @@ Vagrant.configure("2") do |config|
         # Master
         config.vm.define "master" do |master|
             ip_address = NETWORK.gsub('X', "#{START_IP}")
-            master.vm.hostname = "master"
             master.vm.network "public_network", bridge: DEFAULT_NETWORK_INTERFACE, ip: ip_address #, auto_config: true
             # TODO: [KUBE-23] Ref: https://github.com/hashicorp/vagrant/issues/12984
             # master.vm.base_address = ip_address
@@ -106,7 +105,6 @@ Vagrant.configure("2") do |config|
         # Storage
         config.vm.define "storage" do |storage|
             ip_address = NETWORK.gsub('X', "#{STORAGE_IP}")
-            storage.vm.hostname   = "storage"
             storage.disksize.size = '250GB'
             storage.vm.network "public_network", bridge: DEFAULT_NETWORK_INTERFACE, ip: ip_address
 
@@ -130,7 +128,6 @@ Vagrant.configure("2") do |config|
         # Worker
         config.vm.define "worker#{format('%02d', i)}" do |node|
             ip_address = NETWORK.gsub('X', "#{START_IP + i}")
-            node.vm.hostname = "worker#{format('%02d', i)}"
             node.vm.network "public_network", bridge: DEFAULT_NETWORK_INTERFACE, ip: ip_address
 
             # Worker VirtualBox
