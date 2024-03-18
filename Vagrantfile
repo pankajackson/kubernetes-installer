@@ -15,9 +15,9 @@ VAGRANT_BOX_CHECK_UPDATE = false
 MASTER_CPU      = 2
 MASTER_MEMORY   = 4096
 
-WORKER_CPU      = 4
-WORKER_MEMORY   = 32786
-WORKER_COUNT    = 5
+WORKER_CPU      = 7
+WORKER_MEMORY   = 55000
+WORKER_COUNT    = 3
 WORKER_ONLY     = false
 
 STORAGE_CPU     = 1
@@ -149,11 +149,10 @@ Vagrant.configure("2") do |config|
                     ansible.limit = "all"
                     ansible.playbook = "playbooks/kube-installer.yml"
                     ansible.extra_vars = {
+                        version: 1.29,
+                        domain: "jackson.com",
                         worker_only: WORKER_ONLY,
                         storage_ip: NETWORK.gsub('X', "#{STORAGE_IP}"),
-                        system: { 
-                            domain: "jackson.com",
-                        },
                         vagrant: {
                             config_path: "/vagrant/configs",
                             shared_config_path: "/data/configs",

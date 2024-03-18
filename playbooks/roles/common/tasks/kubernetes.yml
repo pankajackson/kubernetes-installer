@@ -12,8 +12,8 @@
         delay: 5
         until: "result is not failed"
         with_items:
-          - url: https://packages.cloud.google.com/apt/doc/apt-key.gpg
-            keyring: /usr/share/keyrings/kubernetes-archive-keyring.gpg
+          - url: https://pkgs.k8s.io/core:/stable:/v{{ version }}/deb/Release.key
+            keyring: /etc/apt/keyrings/kubernetes-apt-keyring.gpg
       - name: Kubernetes Setup | APT | Configure Repository | Add Kubernetes repository
         apt_repository:
           repo: "{{ item.repo }}"
@@ -25,14 +25,14 @@
         delay: 5
         until: "result is not failed"
         with_items:
-          - repo: deb [signed-by=/usr/share/keyrings/kubernetes-archive-keyring.gpg] https://apt.kubernetes.io/ kubernetes-xenial main
-            filename: /etc/apt/sources.list.d/kubernetes.list
+          - repo: deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v{{ version }}/deb/ /
+            filename: /etc/apt/sources.list.d/kubernetes
       - name: Kubernetes Setup | APT | Install required packages
         apt:
           pkg:
-            - kubelet={{ kubernetes.version }}
-            - kubectl={{ kubernetes.version }}
-            - kubeadm={{ kubernetes.version }}
+            - kubelet
+            - kubectl
+            - kubeadm
           update_cache: yes
         become: true
         register: result
@@ -44,11 +44,10 @@
           name: "{{ item }}"
           selection: hold
         with_items:
-         - kubelet
-         - kubeadm
-         - kubectl
+          - kubelet
+          - kubeadm
+          - kubectl
         become: true
-
 
   - name: Kubernetes Setup | Service
     block:

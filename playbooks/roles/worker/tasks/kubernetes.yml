@@ -39,4 +39,4 @@
           group: "{{ ansible_env.USER }}"
         become: true
       - name: Kubernetes Setup | Node Configuration | Update Node role
-        shell: kubectl label node {{ ansible_hostname }}.{{ system.domain }} node-role.kubernetes.io/worker=worker
+        shell: kubectl label node {{ ansible_hostname }}.{{ domain }} node-role.kubernetes.io/worker=worker

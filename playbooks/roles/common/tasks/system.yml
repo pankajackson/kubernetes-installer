@@ -39,7 +39,7 @@
     block:
       - name: System Setup | HOST | Reset Hostname Configuration
         hostname:
-          name: "kube-{{ ansible_eth1.ipv4.address | replace('.','') | reverse }}.{{ system.domain }}"
+          name: "kube-{{ ansible_eth1.ipv4.address | replace('.','') | reverse }}.{{ domain }}"
         become: true
 
 
@@ -54,7 +54,7 @@
       - name: System Setup | SSH | Update SSH Banner
         shell: |
           toilet -f term  -w 102 'Welcome to ....' | tee /etc/issue > /etc/issue.net
-          toilet -f mono12 -F border -w 500 "{{ system.domain | upper }}" | tee -a /etc/issue >> /etc/issue.net
+          toilet -f mono12 -F border -w 500 "{{ domain | upper }}" | tee -a /etc/issue >> /etc/issue.net
           toilet -f term  -w 102 "$(hostname)" | tee -a /etc/issue >> /etc/issue.net
           toilet -f term  -w 102 'ALERT! You are entering into a secured area! Your IP, Login Time, Username has been noted and has been sent to the server administrator! This service is restricted to authorized users only. All activities on this system are logged. Unauthorized access will be fully investigated and reported to the appropriate law enforcement agencies.' | tee -a /etc/issue >> /etc/issue.net
         become: true

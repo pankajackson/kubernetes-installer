@@ -1,7 +1,6 @@
 ---
-# system:
-#   domain: "jackson.com"
-
+domain: "jackson.com"
+version: "1.29"
 crio:
   os: "xUbuntu_20.04"
   version: "1.23"
@@ -10,9 +9,9 @@ crio:
     - overlay
     - br_netfilter
   sysctl:
-    - { name: 'net.bridge.bridge-nf-call-iptables', value: 1 }
-    - { name: 'net.ipv4.ip_forward', value: 1 }
-    - { name: 'net.bridge.bridge-nf-call-ip6tables', value: 1 }
+    - { name: "net.bridge.bridge-nf-call-iptables", value: 1 }
+    - { name: "net.ipv4.ip_forward", value: 1 }
+    - { name: "net.bridge.bridge-nf-call-ip6tables", value: 1 }
   packages:
     - cri-o
     - cri-o-runc
@@ -30,4 +29,3 @@ kubernetes:
   # NOTE: crio engine and flannel network cause dns-issue in kubeernetes cluster
   # TODO: FIX DNS ISSUE for crio engine and flannel network plugin
   container_runtime: "docker"
-  version: "1.28.2-00"
