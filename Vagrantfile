@@ -27,7 +27,6 @@ STORAGE_IP      = 254
 NETWORK     = "10.0.0.X"
 START_IP    = 10
 
-
 # Get extra arguments from cli
 opts = GetoptLong.new(
     [ '--master-cpu', GetoptLong::OPTIONAL_ARGUMENT ],
@@ -82,11 +81,7 @@ Vagrant.configure("2") do |config|
         # Master
         config.vm.define "master" do |master|
             ip_address = NETWORK.gsub('X', "#{START_IP}")
-            master.vm.network "public_network", bridge: DEFAULT_NETWORK_INTERFACE, ip: ip_address #, auto_config: true
-            # TODO: [KUBE-23] Ref: https://github.com/hashicorp/vagrant/issues/12984
-            # master.vm.base_address = ip_address
-            # master.ssh.host = ip_address
-            # master.ssh.port = 22
+            master.vm.network "public_network", bridge: DEFAULT_NETWORK_INTERFACE, ip: ip_address
 
             # Master VirtualBox
             master.vm.provider :virtualbox do |vbox|
@@ -105,7 +100,6 @@ Vagrant.configure("2") do |config|
         # Storage
         config.vm.define "storage" do |storage|
             ip_address = NETWORK.gsub('X', "#{STORAGE_IP}")
-            storage.disksize.size = '250GB'
             storage.vm.network "public_network", bridge: DEFAULT_NETWORK_INTERFACE, ip: ip_address
 
             # Storage VirtualBox
@@ -113,6 +107,23 @@ Vagrant.configure("2") do |config|
                 vbox.name   = "storage"
                 vbox.cpus   = STORAGE_CPU
                 vbox.memory = STORAGE_MEMORY
+                vb_machine_folder = `vboxmanage list systemproperties | grep "Default machine folder" | cut -d ':' -f2`.strip
+                disk_path = File.join(vb_machine_folder, "storage", "data_storage.vdi")
+                
+                # Check if the disk already exists, and if not, create it
+                unless File.exist?(disk_path)
+                    vbox.customize ['createhd', '--filename', disk_path, '--size', 256000] # Size in MB, e.g., 10GB
+                end
+
+                # Attach the disk to the VM
+                vbox.customize [
+                'storageattach', :id,
+                '--storagectl', 'SATA Controller',
+                '--port', 1,
+                '--device', 0,
+                '--type', 'hdd',
+                '--medium', disk_path
+                ]
             end
 
             # Storage LibVirt
@@ -149,7 +160,7 @@ Vagrant.configure("2") do |config|
                     ansible.limit = "all"
                     ansible.playbook = "playbooks/kube-installer.yml"
                     ansible.extra_vars = {
-                        version: 1.29,
+                        version: 1.31,
                         domain: "jackson.com",
                         worker_only: WORKER_ONLY,
                         storage_ip: NETWORK.gsub('X', "#{STORAGE_IP}"),
@@ -163,4 +174,4 @@ Vagrant.configure("2") do |config|
             end
         end
     end
-end 
+end

@@ -7,7 +7,7 @@
 
   - name: Disk Setup | Fetch disk name
     shell: |
-        fdisk -l | grep Disk | grep -E '(vda:|sda:)' | cut -d" " -f2 | cut -d":" -f1
+        fdisk -l | grep Disk | grep -E '(vdb:|sdb:)' | cut -d" " -f2 | cut -d":" -f1
     become: true
     register: disk_name
 
@@ -18,34 +18,16 @@
       ) | sudo fdisk {{ disk_name.stdout }}
     become: true
 
-  - name: "Disk Setup | Read device information {{ disk_name.stdout }}"
-    parted:
-      device: "{{ disk_name.stdout }}"
-      unit: MiB
-    register: device_info
-    become: true
-
-  - name: "Disk Setup | Add new partition {{ disk_name.stdout }}{{ device_info.partitions[-1].num + 1}}"
-    parted:
-      device: "{{ disk_name.stdout }}"
-      number: "{{ device_info.partitions[-1].num + 1}}"
-      part_type: "{{ disk_part.type }}"
-      label: "{{ disk_part.label }}"
-      state: present
-      part_end: "100%"
-      part_start: "{{ device_info.partitions[-1].end + 1 }}MiB"
-    become: true
-
   - name: Disk Setup | Create Filesystem
     filesystem:
       fstype: "{{ disk_part.fs }}"
-      dev: "{{ disk_name.stdout }}{{ device_info.partitions[-1].num + 1}}"
+      dev: "{{ disk_name.stdout }}"
     become: true
 
   - name: Disk Setup | Mount Partition
     mount:
       fstype: "{{ disk_part.fs }}"
-      src: "{{ disk_name.stdout }}{{ device_info.partitions[-1].num + 1}}"
+      src: "{{ disk_name.stdout }}"
       path: "{{ disk_part.mount }}"
       state: mounted
     become: true
