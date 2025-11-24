@@ -1,8 +1,6 @@
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
 
-require 'getoptlong'
-
 DEFAULT_NETWORK_INTERFACE = `ip route | awk '/^default/ {printf "%s", $5; exit 0}'`
 
 ENV['VAGRANT_NO_PARALLEL'] = 'yes'
@@ -12,51 +10,20 @@ VAGRANT_BOX         = "bento/ubuntu-22.04"
 VAGRANT_BOX_VERSION = "202309.08.0"
 VAGRANT_BOX_CHECK_UPDATE = false
 
-MASTER_CPU      = 2
-MASTER_MEMORY   = 4096
+MASTER_CPU      = (ENV['MASTER_CPU']    || 2).to_i
+MASTER_MEMORY   = (ENV['MASTER_MEMORY'] || 4096).to_i
 
-WORKER_CPU      = 7
-WORKER_MEMORY   = 55000
-WORKER_COUNT    = 3
-WORKER_ONLY     = false
+WORKER_CPU      = (ENV['WORKER_CPU']    || 7).to_i
+WORKER_MEMORY   = (ENV['WORKER_MEMORY'] || 55000).to_i
+WORKER_COUNT    = (ENV['WORKER_COUNT']  || 3).to_i
+WORKER_ONLY     = ENV['WORKER_ONLY'] == "true"
 
 STORAGE_CPU     = 1
 STORAGE_MEMORY  = 1024
 STORAGE_IP      = 254
 
-NETWORK     = "10.0.0.X"
-START_IP    = 10
-
-# Get extra arguments from cli
-opts = GetoptLong.new(
-    [ '--master-cpu', GetoptLong::OPTIONAL_ARGUMENT ],
-    [ '--master-memory', GetoptLong::OPTIONAL_ARGUMENT ],
-    [ '--worker-cpu', GetoptLong::OPTIONAL_ARGUMENT ],
-    [ '--worker-memory', GetoptLong::OPTIONAL_ARGUMENT ],
-    [ '--worker-count', GetoptLong::OPTIONAL_ARGUMENT ],
-    [ '--worker-only', GetoptLong::OPTIONAL_ARGUMENT ],
-    [ '--start-ip', GetoptLong::OPTIONAL_ARGUMENT ],
-)
-opts.ordering=(GetoptLong::REQUIRE_ORDER)
-
-opts.each do |opt, arg|
-    case opt
-        when '--master-cpu'
-            MASTER_CPU=arg.to_i
-        when '--master-memory'
-            MASTER_MEMORY=arg.to_i
-        when '--worker-cpu'
-            WORKER_CPU=arg.to_i
-        when '--worker-memory'
-            WORKER_MEMORY=arg.to_i
-        when '--worker-count'
-            WORKER_COUNT=arg.to_i
-        when '--worker-only'
-            WORKER_ONLY=true
-        when '--start-ip'
-            START_IP=arg.to_i
-    end
-end
+NETWORK         = "10.0.0.X"
+START_IP        = (ENV['START_IP']      || 10).to_i
 
 puts "Worker Only = #{WORKER_ONLY}"
 puts "Default network Interface = #{DEFAULT_NETWORK_INTERFACE}"
