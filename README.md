@@ -1,107 +1,358 @@
-# Vagrantfile and Ansible Playbooks to Automate Kubernetes Setup using Kubeadm
+# Terraform K3s Infrastructure
 
-## Prerequisites
+Infrastructure repository for provisioning a fully automated K3s Kubernetes cluster on Proxmox VE using the [terraform-proxmox-k8s module](https://github.com/pankajackson/terraform-proxmox-k8s).
 
-1. Working Vagrant setup
-2. 8 Gig + RAM workstation as the Vms use 4 vCPUS and 4+ GB RAM
+This repository acts as the **consumer/root Terraform project** and contains:
 
-## For MAC/Linux Users
+- Provider configuration
+- Environment-specific variables
+- Cluster definitions
+- Terraform state management
+- Generated kubeconfig and access helpers
 
-Latest version of Virtualbox for Mac/Linux can cause issues because you have to create/edit the /etc/vbox/networks.conf file and add:
+---
 
-```conf
-0.0.0.0/0 ::/0
+## Requirements
+
+| Name       | Version |
+| ---------- | ------- |
+| Terraform  | >= 1.5  |
+| Proxmox VE | >= 7.x  |
+
+---
+
+## Providers
+
+| Name    | Source        |
+| ------- | ------------- |
+| proxmox | `bpg/proxmox` |
+
+---
+
+## Repository Structure
+
+```text
+.
+├── main.tf
+├── providers.tf
+├── variables.tf
+├── outputs.tf
+├── test.auto.tfvars
+├── .generated/
+│   ├── kubeconfig.yaml
+│   └── vm_key.pem
+└── README.md
 ```
 
-or run below commands
+---
 
-```shell
-sudo mkdir -p /etc/vbox/
-echo "* 0.0.0.0/0 ::/0" | sudo tee -a /etc/vbox/networks.conf
-```
+## Usage
 
-So that the host only networks can be in any range, not just 192.168.56.0/21 as described here:
-[https://discuss.hashicorp.com/t/vagrant-2-2-18-osx-11-6-cannot-create-private-network/30984/23](https://discuss.hashicorp.com/t/vagrant-2-2-18-osx-11-6-cannot-create-private-network/30984/23)
+### 1. Clone Repository
 
-## NetPlan Setup (Optional)
-
-To make kubernetes network secure try to create virtual IP in your local machine subnet with netplan tool. Below is an example of how you could do it.
-
-edit file `/etc/netplan/01-network-manager-all.yaml` and Add extra/Virtual IP address (eg: 10.0.0.1) in same adapter in all the machines.
-
-```shell
-network:
-  version: 2
-  renderer: NetworkManager
-  ethernets:
-    enp0s31f6:
-      dhcp4: no
-      addresses: [192.168.1.8/24, 10.0.0.1/24]
-      gateway4: 192.168.1.1
-      nameservers:
-        addresses: [192.168.1.8, 8.8.8.8]
-```
-
-## Usage/Examples
-
-To provision the cluster, execute the following commands.
-
-```shell
-sudo apt install nfs-common nfs-kernel-server
-git clone https://pankajackson@bitbucket.org/pankajackson/kubernetes-installer.git
+```bash
+git clone https://github.com/pankajackson/kubernetes-installer.git
 cd kubernetes-installer
-vagrant up
 ```
 
-To provision the cluster along with node configurations in extra arguments, execute the following commands.
+---
 
-```shell
-MASTER_CPU=4 WORKER_CPU=6 WORKER_MEMORY=6000 WORKER_COUNT=2 vagrant up
+### 2. Configure Variables
+
+Create or edit:
+
+```text
+test.auto.tfvars
 ```
 
-To provision the cluster in multiple physical machine, execute the following commands.
+Example:
 
-```shell
-# execute in main physical that will deploy Kube Master Node
-MASTER_CPU=4 WORKER_CPU=6 WORKER_MEMORY=6000 WORKER_COUNT=2 vagrant up
+```hcl
+proxmox_endpoint = "https://192.168.1.2:8006/"
+proxmox_username = "root@pam"
+proxmox_password = "your-password"
 
-# execute in other physical that will deploy Kube Worker Node
-WORKER_ONLY=true WORKER_CPU=2 WORKER_MEMORY=16384 WORKER_COUNT=3 START_IP=20 vagrant up
+proxmox_tls_insecure = true
 ```
 
-NOTE:
+---
 
-- WORKER_ONLY=true flag will connect to already created master Node instead of creating new Master Node
-- Make Sure to change value of START_IP in every physical machine to avoid duplicate IPs in two kube worker node
+### 3. Initialize Terraform
 
-## Set Kubeconfig file variable
-
-```shell
-cd kubernetes-installer
-cd configs
-export KUBECONFIG=$(pwd)/config
+```bash
+terraform init
 ```
 
-or you can copy the config file to .kube directory.
+---
 
-```shell
-cp config ~/.kube/
+### 4. Review Plan
+
+```bash
+terraform plan
 ```
 
-## To shutdown the cluster
+---
 
-```shell
-vagrant halt
+### 5. Apply Infrastructure
+
+```bash
+terraform apply
 ```
 
-## To restart the cluster
+---
 
-```shell
-vagrant up
+## Example Cluster Configuration
+
+```hcl
+module "k3s" {
+  source = "git::https://github.com/pankajackson/terraform-proxmox-k8s.git"
+
+  proxmox = {
+    node = "proxmox"
+  }
+
+  cluster = {
+    name = "k8s"
+  }
+
+  master = {
+    cpu        = 2
+    memory     = 2048
+    disk       = 30
+    ip_address = "192.168.1.10"
+  }
+
+  workers = {
+    count    = 2
+    cpu      = 3
+    memory   = 4096
+    disk     = 30
+    ip_start = 11
+  }
+
+  network = {
+    gateway = "192.168.1.1"
+
+    dns = {
+      servers = [
+        "192.168.1.1",
+        "8.8.8.8"
+      ]
+    }
+
+    nfs = {
+      server = "192.168.1.253"
+      path   = "/data/lxa_k8s"
+    }
+  }
+
+  k3s = {
+    version = "v1.35.4+k3s1"
+
+    tls_san = [
+      "kube.example.com",
+      "kubernetes.example.com",
+      "k3s.example.com",
+      "k8s.example.com"
+    ]
+
+    features = {
+      metrics       = true
+      local_storage = true
+      traefik       = false
+    }
+  }
+
+  addons = {
+    metallb = {
+      enabled        = true
+      ipaddress_pool = "192.168.1.100-192.168.1.250"
+    }
+
+    ingress_nginx = {
+      enabled         = true
+      loadbalancer_ip = "192.168.1.202"
+    }
+
+    nfs_storage = {
+      enabled       = true
+      server        = "192.168.1.253"
+      path          = "/data/lxa_k8s"
+      storage_class = "nfs"
+    }
+
+    headlamp = {
+      enabled  = true
+      hostname = "hl.example.com"
+    }
+  }
+}
 ```
 
-## To destroy the cluster
+---
 
-```shell
-vagrant destroy -f
+## Provider Configuration
+
+```hcl
+terraform {
+  required_providers {
+    proxmox = {
+      source  = "bpg/proxmox"
+      version = "~> 0.5"
+    }
+  }
+}
+
+provider "proxmox" {
+  endpoint = var.proxmox_endpoint
+  username = var.proxmox_username
+  password = var.proxmox_password
+  insecure = var.proxmox_tls_insecure
+
+  ssh {
+    agent = true
+  }
+}
 ```
+
+---
+
+## Variables
+
+### Proxmox Credentials
+
+| Name                   | Type     | Sensitive | Description           |
+| ---------------------- | -------- | --------- | --------------------- |
+| `proxmox_endpoint`     | `string` | no        | Proxmox API endpoint  |
+| `proxmox_username`     | `string` | no        | Proxmox API username  |
+| `proxmox_password`     | `string` | yes       | Proxmox API password  |
+| `proxmox_tls_insecure` | `bool`   | no        | Skip TLS verification |
+
+---
+
+## Outputs
+
+Example outputs configuration:
+
+```hcl
+output "cluster" {
+  value = module.k3s.cluster
+}
+
+output "access" {
+  value = module.k3s.access
+}
+
+output "secrets" {
+  value     = module.k3s.secrets
+  sensitive = true
+}
+```
+
+---
+
+## Accessing Cluster
+
+### Export KUBECONFIG
+
+```bash
+export KUBECONFIG=.generated/kubeconfig.yaml
+```
+
+---
+
+### Verify Cluster
+
+```bash
+kubectl get nodes
+```
+
+---
+
+### SSH Into Master Node
+
+```bash
+ssh -i .generated/vm_key.pem lxa@192.168.1.10
+```
+
+---
+
+## Generated Files
+
+Terraform module automatically generates:
+
+```text
+.generated/
+├── kubeconfig.yaml
+└── vm_key.pem
+```
+
+These files are generated in the **root Terraform repository**.
+
+---
+
+## Recommended Remote State
+
+For production usage, use remote state storage:
+
+- Terraform Cloud
+- OpenTofu State
+- S3 Compatible Storage
+- GitLab Remote State
+
+Example:
+
+```hcl
+terraform {
+  backend "s3" {
+    bucket = "terraform-state"
+    key    = "k3s/terraform.tfstate"
+    region = "us-east-1"
+  }
+}
+```
+
+---
+
+## Common Commands
+
+### Upgrade Module
+
+```bash
+terraform init -upgrade
+```
+
+---
+
+### Recreate Addons Only
+
+```bash
+terraform apply -replace="module.k3s.null_resource.addons_bootstrap[0]"
+```
+
+---
+
+### Destroy Cluster
+
+```bash
+terraform destroy
+```
+
+---
+
+## Notes
+
+- Worker cleanup executes automatically during destroy
+- Cloud-init readiness is validated before K3s bootstrap
+- Addons are deployed using Helmfile
+- MetalLB should use dedicated IP ranges only
+- Kubeconfig is downloaded automatically after cluster bootstrap
+- Generated files are written to the root Terraform project
+
+---
+
+## Module
+
+Terraform module used by this repository:
+
+[terraform-proxmox-k8s](https://github.com/pankajackson/terraform-proxmox-k8s)
