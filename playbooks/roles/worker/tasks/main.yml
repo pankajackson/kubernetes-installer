@@ -1,3 +1,0 @@
----
-  - name: Kubernetes Setup
-    include_tasks: kubernetes.yml

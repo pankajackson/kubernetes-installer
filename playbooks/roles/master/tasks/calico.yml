@@ -1,9 +1,0 @@
----
-  - name: Calico Setup
-    block:
-      - name: Calico Setup | Install
-        shell: kubectl apply -f https://raw.githubusercontent.com/projectcalico/calico/v3.25.0/manifests/calico.yaml
-        register: result
-        retries: 5
-        delay: 5
-        until: "result is not failed"
