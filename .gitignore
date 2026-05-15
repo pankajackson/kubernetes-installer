@@ -85,3 +85,4 @@ terraform.rc
 .generated/
 *.pem
 *kubeconfig*
+*.env
